@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ماشین‌حساب مدیریت سرمایه</title>
+    
+    <!--
+    ═══════════════════════════════════════════════════════════════════════════
+    پروژه: ماشین‌حساب مدیریت سرمایه برای معاملات
+    ═══════════════════════════════════════════════════════════════════════════
+    
+    توضیحات:
+    این وب‌اپ یک ماشین‌حساب ساده برای مدیریت سرمایه در معاملات است.
+    کاربر می‌تواند موجودی کل، درصد ریسک و حد ضرر را وارد کند
+    و برنامه حجم مجاز معامله و مقدار ضرر احتمالی را محاسبه می‌کند.
+    
+    نحوه استفاده:
+    1. فایل index.html را در هر مرورگری (کروم، فایرفاکس، سافاری و...) باز کنید
+    2. روی موبایل: فایل را در گوشی کپی کنید و با مرورگر موبایل باز کنید
+    3. یا می‌توانید فایل را روی یک سرور قرار دهید و از طریق لینک به آن دسترسی داشته باشید
+    
+    ویژگی‌ها:
+    - محاسبه خودکار حجم معامله بر اساس ریسک
+    - هشدار در صورت ریسک بالا (بیش از 5%)
+    - طراحی واکنش‌گرا برای موبایل و دسکتاپ
+    - تم تیره مخصوص تریدرها
+    
+    ═══════════════════════════════════════════════════════════════════════════
+    -->
+    
+    <style>
+        /* ═══ تنظیمات پایه ═══ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* ═══ کانتینر اصلی ═══ */
+        .container {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* ═══ هدر ═══ */
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+        }
+        
+        .header p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        /* ═══ فرم ورودی ═══ */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d1d5db;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(17, 24, 39, 0.8);
+            border: 2px solid rgba(75, 85, 99, 0.5);
+            border-radius: 12px;
+            color: #f3f4f6;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+        
+        .form-group input::placeholder {
+            color: #6b7280;
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        /* ═══ دکمه محاسبه ═══ */
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* ═══ نتایج ═══ */
+        .results {
+            margin-top: 35px;
+            padding: 25px;
+            background: rgba(17, 24, 39, 0.6);
+            border-radius: 15px;
+            border: 1px solid rgba(75, 85, 99, 0.3);
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h2 {
+            color: #60a5fa;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .result-item {
+            margin-bottom: 18px;
+            padding: 15px;
+            background: rgba(31, 41, 55, 0.6);
+            border-radius: 10px;
+            border-right: 4px solid #60a5fa;
+        }
+        
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .result-label {
+            color: #9ca3af;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            color: #f3f4f6;
+            font-size: 22px;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .result-value.highlight {
+            color: #34d399;
+            text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+        }
+        
+        .result-value.warning {
+            color: #fbbf24;
+        }
+        
+        /* ═══ پیام هشدار ═══ */
+        .warning-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px solid rgba(220, 38, 38, 0.4);
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .warning-box.show {
+            display: block;
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .warning-box .warning-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box p {
+            color: #fca5a5;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .warning-box strong {
+            color: #ef4444;
+        }
+        
+        /* ═══ پیام خطا ═══ */
+        .error-message {
+            background: rgba(220, 38, 38, 0.15);
+            color: #fca5a5;
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            font-size: 14px;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        /* ═══ فوتر ═══ */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        
+        /* ═══ واکنش‌گرایی برای موبایل ═══ */
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .form-group input {
+                padding: 12px 15px;
+                font-size: 15px;
+            }
+            
+            .calculate-btn {
+                padding: 14px;
+                font-size: 16px;
+            }
+            
+            .result-value {
+                font-size: 20px;
+            }
+        }
+        
+        /* ═══ اسکرول‌بار سفارشی ═══ */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(17, 24, 39, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(96, 165, 250, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(96, 165, 250, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- هدر -->
+        <div class="header">
+            <h1>💰 ماشین‌حساب مدیریت سرمایه</h1>
+            <p>محاسبه حجم معامله بر اساس ریسک مشخص</p>
+        </div>
+        
+        <!-- فرم ورودی -->
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="balance">موجودی کل سرمایه (دلار)</label>
+                <input 
+                    type="number" 
+                    id="balance" 
+                    placeholder="مثال: 10000" 
+                    step="0.01"
+                    min="0"
+                    required
+                >
+                <span class="input-hint">مجموع سرمایه‌ای که برای معامله دارید</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="riskPercent">درصد ریسک در هر معامله (%)</label>
+                <input 
+                    type="number" 
+                    id="riskPercent" 
+                    placeholder="مثال: 2" 
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    required
+                >
+                <span class="input-hint">معمولاً بین 1 تا 3 درصد توصیه می‌شود</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="stopLoss">فاصله حد ضرر (پیپ یا درصد)</label>
+                <input 
+                    type="number" 
+                    id="stopLoss" 
+                    placeholder="مثال: 50" 
+                    step="0.01"
+                    min="0"
+                    required
+                >
+                <span class="input-hint">فاصله تا استاپ‌لاس (پیپ در فارکس یا درصد در کریپتو)</span>
+            </div>
+            
+            <button type="submit" class="calculate-btn">محاسبه کن 📊</button>
+        </form>
+        
+        <!-- پیام خطا -->
+        <div class="error-message" id="errorMessage"></div>
+        
+        <!-- نتایج -->
+        <div class="results" id="results">
+            <h2>📈 نتایج محاسبه</h2>
+            
+            <div class="result-item">
+                <span class="result-label">مقدار ریسک (دلار)</span>
+                <span class="result-value warning" id="riskAmount">$0</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">حجم مجاز معامله</span>
+                <span class="result-value highlight" id="positionSize">0</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">ضرر در صورت برخورد به استاپ</span>
+                <span class="result-value" id="maxLoss">$0</span>
+            </div>
+            
+            <!-- پیام هشدار ریسک بالا -->
+            <div class="warning-box" id="warningBox">
+                <div class="warning-icon">⚠️</div>
+                <p><strong>هشدار:</strong> درصد ریسک شما بیشتر از 5% است! این می‌تواند برای سرمایه شما خطرناک باشد. توصیه می‌شود ریسک را کاهش دهید.</p>
+            </div>
+        </div>
+        
+        <!-- فوتر -->
+        <div class="footer">
+            <p>💡 نکته: همیشه از مدیریت سرمایه صحیح استفاده کنید</p>
+            <p style="margin-top: 10px;">برای استفاده روی موبایل: این فایل را باز کنید</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- JavaScript: محاسبات و مدیریت فرم -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <script>
+        // دریافت المان‌های فرم
+        const form = document.getElementById('calculatorForm');
+        const balanceInput = document.getElementById('balance');
+        const riskPercentInput = document.getElementById('riskPercent');
+        const stopLossInput = document.getElementById('stopLoss');
+        
+        // دریافت المان‌های نمایش نتایج
+        const resultsDiv = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+        const warningBox = document.getElementById('warningBox');
+        const riskAmountSpan = document.getElementById('riskAmount');
+        const positionSizeSpan = document.getElementById('positionSize');
+        const maxLossSpan = document.getElementById('maxLoss');
+        
+        // تابع فرمت کردن اعداد به دلار
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+        
+        // تابع فرمت کردن اعداد بزرگ
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(num);
+        }
+        
+        // تابع نمایش پیام خطا
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            resultsDiv.classList.remove('show');
+            
+            // پنهان کردن خطا بعد از 4 ثانیه
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 4000);
+        }
+        
+        // تابع اعتبارسنجی ورودی‌ها
+        function validateInputs(balance, riskPercent, stopLoss) {
+            if (isNaN(balance) || balance <= 0) {
+                return 'موجودی سرمایه باید یک عدد مثبت باشد.';
+            }
+            
+            if (isNaN(riskPercent) || riskPercent <= 0 || riskPercent > 100) {
+                return 'درصد ریسک باید بین 0 تا 100 باشد.';
+            }
+            
+            if (isNaN(stopLoss) || stopLoss <= 0) {
+                return 'فاصله حد ضرر باید یک عدد مثبت باشد.';
+            }
+            
+            return null; // هیچ خطایی نیست
+        }
+        
+        // تابع محاسبه
+        function calculatePosition(balance, riskPercent, stopLoss) {
+            // محاسبه مقدار ریسک به دلار
+            const riskAmount = (balance * riskPercent) / 100;
+            
+            // محاسبه حجم معامله
+            // فرمول: (مقدار ریسک) / (فاصله تا استاپ)
+            const positionSize = riskAmount / stopLoss;
+            
+            // ضرر احتمالی (که برابر با مقدار ریسک است)
+            const maxLoss = riskAmount;
+            
+            return {
+                riskAmount,
+                positionSize,
+                maxLoss,
+                isHighRisk: riskPercent > 5
+            };
+        }
+        
+        // مدیریت ارسال فرم
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // جلوگیری از بارگذاری مجدد صفحه
+            
+            // دریافت مقادیر ورودی
+            const balance = parseFloat(balanceInput.value);
+            const riskPercent = parseFloat(riskPercentInput.value);
+            const stopLoss = parseFloat(stopLossInput.value);
+            
+            // اعتبارسنجی
+            const validationError = validateInputs(balance, riskPercent, stopLoss);
+            if (validationError) {
+                showError(validationError);
+                return;
+            }
+            
+            // محاسبه
+            try {
+                const results = calculatePosition(balance, riskPercent, stopLoss);
+                
+                // نمایش نتایج
+                riskAmountSpan.textContent = formatCurrency(results.riskAmount);
+                positionSizeSpan.textContent = formatNumber(results.positionSize);
+                maxLossSpan.textContent = formatCurrency(results.maxLoss);
+                
+                // نمایش یا پنهان کردن هشدار
+                if (results.isHighRisk) {
+                    warningBox.classList.add('show');
+                } else {
+                    warningBox.classList.remove('show');
+                }
+                
+                // نمایش بخش نتایج
+                resultsDiv.classList.add('show');
+                errorMessage.classList.remove('show');
+                
+                // اسکرول نرم به نتایج
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+            } catch (error) {
+                showError('خطا در محاسبات. لطفاً دوباره تلاش کنید.');
+                console.error('Calculation error:', error);
+            }
+        });
+        
+        // پاک کردن خطا هنگام تغییر ورودی‌ها
+        [balanceInput, riskPercentInput, stopLossInput].forEach(input => {
+            input.addEventListener('input', function() {
+                errorMessage.classList.remove('show');
+            });
+        });
+        
+        // افکت بارگذاری
+        window.addEventListener('load', function() {
+            document.querySelector('.container').style.animation = 'slideIn 0.6s ease';
+        });
+        
+        console.log('✅ ماشین‌حساب مدیریت سرمایه آماده است!');
+        console.log('📱 برای استفاده روی موبایل: این فایل HTML را در مرورگر موبایل باز کنید');
+    </script>
+</body>
+</html>

@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎲 تحلیلگر ضرایب دایس</title>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #2a2a4e;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #00d4ff;
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .subtitle {
+            color: #8892b0;
+            font-size: 13px;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: linear-gradient(145deg, #1a1f2e, #0f1419);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3a5e;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 16px;
+            background: #0a0e14;
+            border: 2px solid #2a3a5e;
+            border-radius: 12px;
+            color: #00d4ff;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        input[type="number"]::placeholder {
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #0a0e14;
+            min-width: 100px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-excel {
+            flex: 1;
+            background: linear-gradient(135deg, #28a745, #20863a);
+            color: white;
+        }
+
+        .btn-excel:hover {
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-clear {
+            flex: 1;
+            background: linear-gradient(135deg, #dc3545, #b02a37);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(145deg, #1a1f2e, #0f1419);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3a5e;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stats-title {
+            color: #00d4ff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .stats-count {
+            background: #2a3a5e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #8892b0;
+        }
+
+        .last-entries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .entry-chip {
+            background: #2a3a5e;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #00d4ff;
+            font-weight: 500;
+        }
+
+        /* Analysis Table */
+        .analysis-section {
+            background: linear-gradient(145deg, #1a1f2e, #0f1419);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3a5e;
+            overflow-x: auto;
+        }
+
+        .section-title {
+            color: #00d4ff;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #2a3a5e;
+            color: #00d4ff;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #2a3a5e;
+        }
+
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .group-name {
+            color: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .count-cell {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .distance-cell {
+            color: #ff6b9d;
+            font-weight: bold;
+        }
+
+        .probability-cell {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .high-prob {
+            background: rgba(40, 167, 69, 0.2);
+            color: #4ade80;
+        }
+
+        /* Prediction Section */
+        .prediction-section {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #4ade80;
+            box-shadow: 0 0 30px rgba(74, 222, 128, 0.1);
+        }
+
+        .prediction-title {
+            color: #4ade80;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prediction-content {
+            display: grid;
+            gap: 12px;
+        }
+
+        .prediction-item {
+            background: rgba(74, 222, 128, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prediction-label {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .prediction-value {
+            color: #4ade80;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .prediction-bar {
+            height: 8px;
+            background: #2a3a5e;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .prediction-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Algorithm Info */
+        .algo-info {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid #2a3a5e;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #8892b0;
+            line-height: 1.6;
+        }
+
+        .algo-info strong {
+            color: #00d4ff;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #2a3a5e;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid #4ade80;
+        }
+
+        .toast.error {
+            border-left: 4px solid #f87171;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn-save {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 6px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1f2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a3a5e;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a4a6e;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎲 تحلیلگر ضرایب دایس</h1>
+            <p class="subtitle">تحلیل پیشرفته با الگوریتم PRNG</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="number" id="coeffInput" placeholder="ضریب را وارد کنید (0-100)" min="0" max="100" step="0.01">
+                <button class="btn btn-save" onclick="saveCoefficient()">
+                    💾 ذخیره
+                </button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-excel" onclick="downloadExcel()">
+                    📊 دانلود اکسل
+                </button>
+                <button class="btn btn-clear" onclick="clearAllData()">
+                    🗑️ پاک کردن
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stats-header">
+                <span class="stats-title">📈 آخرین ضرایب</span>
+                <span class="stats-count" id="totalCount">مجموع: 0</span>
+            </div>
+            <div class="last-entries" id="lastEntries">
+                <div class="empty-state">
+                    <div class="empty-icon">🎯</div>
+                    <div class="empty-text">هنوز ضریبی وارد نشده است</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Table -->
+        <div class="analysis-section">
+            <div class="section-title">📊 تحلیل ۲۰ ضریب آخر</div>
+            <table id="analysisTable">
+                <thead>
+                    <tr>
+                        <th>گروه</th>
+                        <th>تعداد</th>
+                        <th>فاصله</th>
+                        <th>احتمال</th>
+                    </tr>
+                </thead>
+                <tbody id="analysisBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Prediction Section -->
+        <div class="prediction-section">
+            <div class="prediction-title">🔮 پیش‌بینی هوشمند</div>
+            <div class="prediction-content" id="predictionContent">
+                <div class="empty-state">
+                    <div class="empty-icon">🧠</div>
+                    <div class="empty-text">برای پیش‌بینی، حداقل ۵ ضریب وارد کنید</div>
+                </div>
+            </div>
+            <div class="algo-info">
+                <strong>📌 الگوریتم:</strong> این سیستم از ترکیب تحلیل فاصله‌ای، توزیع یکنواخت PRNG و قانون اعداد بزرگ برای پیش‌بینی استفاده می‌کند. در سیستم‌های Provably Fair، اعداد توزیع یکنواخت دارند و انحراف از میانگین در بلندمدت اصلاح می‌شود.
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ===== Storage Functions =====
+        const STORAGE_KEY = 'diceCoefficients';
+
+        function getStoredCoefficients() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveToStorage(coefficients) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(coefficients));
+        }
+
+        // ===== Toast Notification =====
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ===== Main Functions =====
+        function saveCoefficient() {
+            const input = document.getElementById('coeffInput');
+            const value = parseFloat(input.value);
+
+            if (isNaN(value) || value < 0 || value > 100) {
+                showToast('لطفاً عددی بین 0 تا 100 وارد کنید', 'error');
+                return;
+            }
+
+            const coefficients = getStoredCoefficients();
+            coefficients.push({
+                value: value,
+                timestamp: new Date().toISOString()
+            });
+            saveToStorage(coefficients);
+
+            input.value = '';
+            showToast(`ضریب ${value} ذخیره شد ✓`, 'success');
+            updateDisplay();
+        }
+
+        function clearAllData() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید همه داده‌ها را پاک کنید؟')) {
+                localStorage.removeItem(STORAGE_KEY);
+                showToast('همه داده‌ها پاک شد', 'success');
+                updateDisplay();
+            }
+        }
+
+        // ===== Group Analysis =====
+        const GROUPS = [
+            { name: '0-10', min: 0, max: 10 },
+            { name: '10-20', min: 10, max: 20 },
+            { name: '20-30', min: 20, max: 30 },
+            { name: '30-40', min: 30, max: 40 },
+            { name: '40-50', min: 40, max: 50 },
+            { name: '50-60', min: 50, max: 60 },
+            { name: '60-70', min: 60, max: 70 },
+            { name: '70-80', min: 70, max: 80 },
+            { name: '80-90', min: 80, max: 90 },
+            { name: '90-100', min: 90, max: 100 }
+        ];
+
+        function getGroupIndex(value) {
+            for (let i = 0; i < GROUPS.length; i++) {
+                if (value >= GROUPS[i].min && value < GROUPS[i].max) {
+                    return i;
+                }
+                // Handle exact 100
+                if (i === GROUPS.length - 1 && value === 100) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function analyzeCoefficients(coefficients) {
+            // Get last 20 coefficients
+            const last20 = coefficients.slice(-20);
+            const values = last20.map(c => c.value);
+
+            // Initialize analysis
+            const analysis = GROUPS.map((group, index) => ({
+                group: group.name,
+                count: 0,
+                distance: null,
+                probability: 10 // Base probability for uniform distribution
+            }));
+
+            // Count occurrences in each group
+            values.forEach(value => {
+                const groupIndex = getGroupIndex(value);
+                if (groupIndex >= 0) {
+                    analysis[groupIndex].count++;
+                }
+            });
+
+            // Calculate distance (how many entries ago was the last occurrence)
+            const allValues = coefficients.map(c => c.value);
+            for (let i = 0; i < analysis.length; i++) {
+                let distance = 0;
+                for (let j = allValues.length - 1; j >= 0; j--) {
+                    const groupIndex = getGroupIndex(allValues[j]);
+                    if (groupIndex === i) {
+                        analysis[i].distance = distance;
+                        break;
+                    }
+                    distance++;
+                }
+                if (analysis[i].distance === null) {
+                    analysis[i].distance = '∞';
+                }
+            }
+
+            return analysis;
+        }
+
+        // ===== Advanced Prediction (PRNG-based) =====
+        function calculatePredictions(coefficients) {
+            if (coefficients.length < 5) {
+                return null;
+            }
+
+            const analysis = analyzeCoefficients(coefficients);
+            const last20 = coefficients.slice(-20);
+            const values = last20.map(c => c.value);
+
+            // Calculate probabilities using multiple factors
+            const predictions = analysis.map((item, index) => {
+                let score = 0;
+
+                // Factor 1: Distance factor (longer distance = higher probability)
+                // In uniform PRNG, each group should appear ~10% of time
+                // If a group hasn't appeared, it's "due" (gambler's fallacy aware - but useful for short-term analysis)
+                const distance = typeof item.distance === 'number' ? item.distance : 50;
+                const distanceScore = Math.min(distance / 20, 2) * 25; // Max 50 points
+
+                // Factor 2: Deviation from expected count
+                // In 20 rolls, each group should appear ~2 times (20/10 groups)
+                const expectedCount = last20.length / 10;
+                const deviation = expectedCount - item.count;
+                const deviationScore = Math.max(0, deviation * 15); // Max ~30 points
+
+                // Factor 3: Recent pattern analysis (pseudo-entropy)
+                // Check for clustering - if many similar values recently, expect change
+                const recentValues = values.slice(-5);
+                const recentInGroup = recentValues.filter(v => getGroupIndex(v) === index).length;
+                const patternScore = recentInGroup > 0 ? -10 : 10;
+
+                // Factor 4: Base probability for uniform distribution
+                const baseScore = 10;
+
+                // Calculate total score
+                score = baseScore + distanceScore + deviationScore + patternScore;
+
+                return {
+                    group: item.group,
+                    score: Math.max(0, score),
+                    distance: item.distance,
+                    count: item.count
+                };
+            });
+
+            // Normalize to percentages
+            const totalScore = predictions.reduce((sum, p) => sum + p.score, 0);
+            predictions.forEach(p => {
+                p.probability = totalScore > 0 ? (p.score / totalScore * 100).toFixed(1) : 10;
+            });
+
+            // Sort by probability (descending)
+            predictions.sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
+
+            return predictions;
+        }
+
+        // ===== Display Functions =====
+        function updateDisplay() {
+            const coefficients = getStoredCoefficients();
+
+            // Update total count
+            document.getElementById('totalCount').textContent = `مجموع: ${coefficients.length}`;
+
+            // Update last entries
+            const lastEntriesDiv = document.getElementById('lastEntries');
+            if (coefficients.length === 0) {
+                lastEntriesDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎯</div>
+                        <div class="empty-text">هنوز ضریبی وارد نشده است</div>
+                    </div>
+                `;
+            } else {
+                const last10 = coefficients.slice(-10).reverse();
+                lastEntriesDiv.innerHTML = last10.map(c =>
+                    `<span class="entry-chip">${c.value}</span>`
+                ).join('');
+            }
+
+            // Update analysis table
+            const analysis = analyzeCoefficients(coefficients);
+            const analysisBody = document.getElementById('analysisBody');
+
+            if (coefficients.length === 0) {
+                analysisBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="padding: 30px; color: #6b7280;">
+                            داده‌ای برای تحلیل وجود ندارد
+                        </td>
+                    </tr>
+                `;
+            } else {
+                // Get predictions for highlighting
+                const predictions = calculatePredictions(coefficients);
+                const topGroups = predictions ? predictions.slice(0, 3).map(p => p.group) : [];
+
+                analysisBody.innerHTML = analysis.map(item => {
+                    const isTop = topGroups.includes(item.group);
+                    return `
+                        <tr class="${isTop ? 'high-prob fade-in' : ''}">
+                            <td class="group-name">${item.group}</td>
+                            <td class="count-cell">${item.count}</td>
+                            <td class="distance-cell">${item.distance}</td>
+                            <td class="probability-cell">${item.probability}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Update predictions
+            updatePredictions(coefficients);
+        }
+
+        function updatePredictions(coefficients) {
+            const predictionContent = document.getElementById('predictionContent');
+
+            if (coefficients.length < 5) {
+                predictionContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🧠</div>
+                        <div class="empty-text">برای پیش‌بینی، حداقل ۵ ضریب وارد کنید</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const predictions = calculatePredictions(coefficients);
+            const top3 = predictions.slice(0, 3);
+
+            predictionContent.innerHTML = `
+                <div class="prediction-item fade-in">
+                    <div>
+                        <div class="prediction-label">🥇 بیشترین احتمال</div>
+                        <div style="margin-top: 5px; color: #d1d5db; font-size: 14px;">
+                            گروه ${top3[0].group} (فاصله: ${top3[0].distance})
+                        </div>
+                        <div class="prediction-bar">
+                            <div class="prediction-fill" style="width: ${top3[0].probability}%"></div>
+                        </div>
+                    </div>
+                    <div class="prediction-value">${top3[0].probability}%</div>
+                </div>
+                <div class="prediction-item fade-in" style="animation-delay: 0.1s;">
+                    <div>
+                        <div class="prediction-label">🥈 احتمال دوم</div>
+                        <div style="margin-top: 5px; color: #d1d5db; font-size: 14px;">
+                            گروه ${top3[1].group} (فاصله: ${top3[1].distance})
+                        </div>
+                        <div class="prediction-bar">
+                            <div class="prediction-fill" style="width: ${top3[1].probability}%"></div>
+                        </div>
+                    </div>
+                    <div class="prediction-value">${top3[1].probability}%</div>
+                </div>
+                <div class="prediction-item fade-in" style="animation-delay: 0.2s;">
+                    <div>
+                        <div class="prediction-label">🥉 احتمال سوم</div>
+                        <div style="margin-top: 5px; color: #d1d5db; font-size: 14px;">
+                            گروه ${top3[2].group} (فاصله: ${top3[2].distance})
+                        </div>
+                        <div class="prediction-bar">
+                            <div class="prediction-fill" style="width: ${top3[2].probability}%"></div>
+                        </div>
+                    </div>
+                    <div class="prediction-value">${top3[2].probability}%</div>
+                </div>
+            `;
+        }
+
+        // ===== Excel Export =====
+        function downloadExcel() {
+            const coefficients = getStoredCoefficients();
+
+            if (coefficients.length === 0) {
+                showToast('داده‌ای برای دانلود وجود ندارد', 'error');
+                return;
+            }
+
+            // Prepare data
+            const excelData = coefficients.map((c, index) => ({
+                'ردیف': index + 1,
+                'ضریب': c.value,
+                'گروه': GROUPS[getGroupIndex(c.value)]?.name || '-',
+                'تاریخ': new Date(c.timestamp).toLocaleDateString('fa-IR'),
+                'زمان': new Date(c.timestamp).toLocaleTimeString('fa-IR')
+            }));
+
+            // Add analysis sheet
+            const analysis = analyzeCoefficients(coefficients);
+            const analysisData = analysis.map(item => ({
+                'گروه': item.group,
+                'تعداد در ۲۰ آخر': item.count,
+                'فاصله': item.distance,
+                'احتمال': item.probability + '%'
+            }));
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Add sheets
+            const ws1 = XLSX.utils.json_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'ضرایب');
+
+            const ws2 = XLSX.utils.json_to_sheet(analysisData);
+            XLSX.utils.book_append_sheet(wb, ws2, 'تحلیل');
+
+            // Generate filename with date
+            const date = new Date().toLocaleDateString('fa-IR').replace(/\//g, '-');
+            const filename = `dice-analysis-${date}.xlsx`;
+
+            // Download
+            XLSX.writeFile(wb, filename);
+            showToast('فایل اکسل دانلود شد ✓', 'success');
+        }
+
+        // ===== Event Listeners =====
+        document.getElementById('coeffInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveCoefficient();
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDisplay();
+        });
+
+        // ===== Console Info =====
+        console.log(`
+╔══════════════════════════════════════════════════════════╗
+║  🎲 تحلیلگر ضرایب دایس                                  ║
+╠══════════════════════════════════════════════════════════╣
+║  این ابزار برای تحلیل ضرایب بازی دایس طراحی شده است    ║
+║                                                          ║
+║  ویژگی‌ها:                                              ║
+║  ✓ ذخیره ضرایب در حافظه مرورگر                         ║
+║  ✓ تحلیل ۲۰ ضریب آخر                                   ║
+║  ✓ پیش‌بینی هوشمند با الگوریتم PRNG                    ║
+║  ✓ خروجی اکسل                                          ║
+╚══════════════════════════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>

@@ -2,28 +2,11 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ماشین‌حساب مدیریت سرمایه</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تحلیلگر ضرایب دایس</title>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /*
-         * ماشین‌حساب مدیریت سرمایه برای معاملات
-         * 
-         * این وب‌اپلیکیشن به شما کمک می‌کند تا:
-         * - حجم مناسب برای هر معامله را محاسبه کنید
-         * - مقدار ریسک در هر معامله را کنترل کنید
-         * - از سرمایه خود محافظت کنید
-         * 
-         * نحوه استفاده:
-         * 1. موجودی کل سرمایه خود را وارد کنید
-         * 2. درصد ریسک مورد نظر (معمولاً 1-3%) را وارد کنید
-         * 3. حد ضرر (فاصله تا استاپ در پیپ یا ضریب بازی) را وارد کنید
-         * 4. نتایج به صورت خودکار محاسبه می‌شود
-         * 
-         * برای اجرا روی موبایل:
-         * - فایل index.html را در مرورگر موبایل خود باز کنید
-         * - یا فایل را به موبایل منتقل کرده و با مرورگر باز کنید
-         */
-
         * {
             margin: 0;
             padding: 0;
@@ -31,335 +14,556 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            color: #e0e0e0;
+            padding: 15px;
+            direction: rtl;
         }
 
         .container {
-            background: #0f1419;
-            border-radius: 15px;
-            padding: 30px;
             max-width: 500px;
-            width: 100%;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid #2a2a3e;
+            margin: 0 auto;
         }
 
         h1 {
             text-align: center;
-            color: #4fc3f7;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #90a4ae;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .form-group {
+            color: #00d4ff;
+            font-size: 1.5rem;
             margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #b0bec5;
-            font-size: 14px;
-            font-weight: 500;
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         input[type="number"] {
-            width: 100%;
-            padding: 12px 15px;
-            background: #1a1f2e;
-            border: 2px solid #2a3a4e;
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-size: 16px;
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            text-align: center;
+            outline: none;
             transition: all 0.3s ease;
         }
 
         input[type="number"]:focus {
-            outline: none;
-            border-color: #4fc3f7;
-            background: #1f2535;
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
         }
 
         input[type="number"]::placeholder {
-            color: #607d8b;
+            color: #888;
         }
 
-        .input-hint {
-            font-size: 12px;
-            color: #78909c;
-            margin-top: 5px;
-        }
-
-        .calculate-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
-            border: none;
-            border-radius: 8px;
-            color: #0f1419;
-            font-size: 16px;
+        .btn {
+            padding: 15px 25px;
+            font-size: 1.1rem;
             font-weight: bold;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+            min-width: 100px;
+        }
+
+        .btn-save:hover, .btn-save:active {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            transform: scale(1.05);
+        }
+
+        .btn-excel {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: #fff;
+            width: 100%;
             margin-top: 10px;
         }
 
-        .calculate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(79, 195, 247, 0.4);
+        .btn-excel:hover, .btn-excel:active {
+            background: linear-gradient(135deg, #34ce57, #28a745);
+            transform: scale(1.02);
         }
 
-        .calculate-btn:active {
-            transform: translateY(0);
-        }
-
-        .results {
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 2px solid #2a2a3e;
-            display: none;
-        }
-
-        .results.show {
-            display: block;
-        }
-
-        .result-item {
-            background: #1a1f2e;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-right: 4px solid #4fc3f7;
-        }
-
-        .result-label {
-            font-size: 13px;
-            color: #90a4ae;
-            margin-bottom: 5px;
-        }
-
-        .result-value {
-            font-size: 22px;
-            color: #4fc3f7;
-            font-weight: bold;
-        }
-
-        .warning {
-            background: #ff6b6b;
+        .btn-clear {
+            background: linear-gradient(135deg, #dc3545, #c82333);
             color: #fff;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-clear:hover, .btn-clear:active {
+            background: linear-gradient(135deg, #e4606d, #dc3545);
+            transform: scale(1.02);
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
             padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-title {
+            color: #00d4ff;
+            font-size: 1.1rem;
+        }
+
+        .stats-count {
+            background: rgba(0, 212, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px 8px;
             text-align: center;
-            font-weight: 500;
-            animation: pulse 2s infinite;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.8;
-            }
+        th {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
-        .error {
+        td {
+            font-size: 1rem;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .count-cell {
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .count-zero {
+            color: #888;
+        }
+
+        .count-high {
             color: #ff6b6b;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
+            font-size: 1.1rem;
         }
 
-        .error.show {
-            display: block;
+        .history-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-            }
+        .history-title {
+            color: #00d4ff;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
 
+        .history-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: rgba(0, 212, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .history-item:nth-child(-n+20) {
+            background: rgba(0, 255, 136, 0.3);
+            border: 1px solid #00ff88;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-size: 0.95rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 136, 0.9);
+            color: #000;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: rgba(255, 107, 107, 0.9);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 3px;
+        }
+
+        /* Remove number input arrows */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        @media (max-width: 360px) {
             h1 {
-                font-size: 20px;
+                font-size: 1.3rem;
             }
-
-            .result-value {
-                font-size: 18px;
+            
+            .btn {
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+            
+            input[type="number"] {
+                padding: 12px;
+                font-size: 1.1rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💰 ماشین‌حساب مدیریت سرمایه</h1>
-        <p class="subtitle">محاسبه حجم معامله و مدیریت ریسک</p>
-
-        <form id="calculatorForm">
-            <div class="form-group">
-                <label for="balance">موجودی کل سرمایه (ریال یا دلار)</label>
-                <input type="number" id="balance" placeholder="مثال: 1000000" step="0.01" min="0">
-                <div class="error" id="balanceError">لطفاً یک عدد معتبر وارد کنید</div>
+        <h1>🎲 تحلیلگر ضرایب دایس</h1>
+        
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="number" id="oddsInput" placeholder="ضریب را وارد کنید (0-100)" min="0" max="100" step="0.01">
+                <button class="btn btn-save" onclick="saveOdds()">ذخیره</button>
             </div>
+            <button class="btn btn-excel" onclick="exportToExcel()">📊 دانلود اکسل</button>
+            <button class="btn btn-clear" onclick="clearAllData()">🗑️ پاک کردن همه</button>
+        </div>
 
-            <div class="form-group">
-                <label for="riskPercent">درصد ریسک در هر معامله</label>
-                <input type="number" id="riskPercent" placeholder="مثال: 2" step="0.1" min="0" max="100">
-                <div class="input-hint">معمولاً بین 1 تا 3 درصد توصیه می‌شود</div>
-                <div class="error" id="riskPercentError">لطفاً یک عدد معتبر وارد کنید</div>
+        <!-- Statistics Table -->
+        <div class="stats-section">
+            <div class="stats-header">
+                <span class="stats-title">📈 تحلیل ۲۰ ضریب آخر</span>
+                <span class="stats-count" id="analyzedCount">۰ ضریب</span>
             </div>
+            <table id="statsTable">
+                <thead>
+                    <tr>
+                        <th>بازه ضریب</th>
+                        <th>تعداد</th>
+                    </tr>
+                </thead>
+                <tbody id="statsBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
 
-            <div class="form-group">
-                <label for="stopLoss">حد ضرر (پیپ یا ضریب)</label>
-                <input type="number" id="stopLoss" placeholder="مثال: 50" step="0.01" min="0.01">
-                <div class="input-hint">فاصله تا استاپ در پیپ (فارکس) یا ضریب بازی</div>
-                <div class="error" id="stopLossError">لطفاً یک عدد معتبر وارد کنید</div>
-            </div>
-
-            <button type="submit" class="calculate-btn">محاسبه</button>
-        </form>
-
-        <div class="results" id="results">
-            <div class="result-item">
-                <div class="result-label">حجم مجاز معامله</div>
-                <div class="result-value" id="positionSize">-</div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">مقدار ضرر در صورت باخت</div>
-                <div class="result-value" id="lossAmount">-</div>
-            </div>
-
-            <div id="warning" class="warning" style="display: none;">
-                ⚠️ هشدار: ریسک شما بیشتر از 5% است! این مقدار ریسک بالایی است.
+        <!-- History Section -->
+        <div class="history-section">
+            <div class="history-title">📋 تاریخچه ضرایب (جدیدترین اول)</div>
+            <div class="history-items" id="historyItems">
+                <div class="no-data">هنوز ضریبی ذخیره نشده است</div>
             </div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        /*
-         * اسکریپت محاسبه مدیریت سرمایه
-         * 
-         * این اسکریپت:
-         * - ورودی‌های کاربر را اعتبارسنجی می‌کند
-         * - حجم معامله را بر اساس ریسک محاسبه می‌کند
-         * - مقدار ضرر احتمالی را محاسبه می‌کند
-         * - در صورت ریسک بالا (>5%) هشدار نمایش می‌دهد
-         */
+        // Initialize odds array from localStorage
+        let oddsArray = JSON.parse(localStorage.getItem('diceOdds')) || [];
 
-        const form = document.getElementById('calculatorForm');
-        const results = document.getElementById('results');
-        const warning = document.getElementById('warning');
+        // Group ranges for analysis
+        const groups = [
+            { min: 0, max: 10, label: '۰ - ۱۰' },
+            { min: 10, max: 20, label: '۱۰ - ۲۰' },
+            { min: 20, max: 30, label: '۲۰ - ۳۰' },
+            { min: 30, max: 40, label: '۳۰ - ۴۰' },
+            { min: 40, max: 50, label: '۴۰ - ۵۰' },
+            { min: 50, max: 60, label: '۵۰ - ۶۰' },
+            { min: 60, max: 70, label: '۶۰ - ۷۰' },
+            { min: 70, max: 80, label: '۷۰ - ۸۰' },
+            { min: 80, max: 90, label: '۸۰ - ۹۰' },
+            { min: 90, max: 100, label: '۹۰ - ۱۰۰' }
+        ];
 
-        // تابع اعتبارسنجی ورودی
-        function validateInput(inputId, errorId) {
-            const input = document.getElementById(inputId);
-            const error = document.getElementById(errorId);
+        // Convert number to Persian digits
+        function toPersianDigits(num) {
+            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return String(num).replace(/\d/g, d => persianDigits[d]);
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 2000);
+        }
+
+        // Save odds to array and localStorage
+        function saveOdds() {
+            const input = document.getElementById('oddsInput');
             const value = parseFloat(input.value);
 
-            if (isNaN(value) || value <= 0) {
-                input.style.borderColor = '#ff6b6b';
-                error.classList.add('show');
-                return null;
-            } else {
-                input.style.borderColor = '#2a3a4e';
-                error.classList.remove('show');
-                return value;
-            }
-        }
-
-        // تابع فرمت اعداد
-        function formatNumber(num) {
-            return new Intl.NumberFormat('fa-IR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(num);
-        }
-
-        // تابع محاسبه
-        function calculate() {
-            // اعتبارسنجی ورودی‌ها
-            const balance = validateInput('balance', 'balanceError');
-            const riskPercent = validateInput('riskPercent', 'riskPercentError');
-            const stopLoss = validateInput('stopLoss', 'stopLossError');
-
-            // اگر ورودی‌ها معتبر نباشند، محاسبه نکن
-            if (balance === null || riskPercent === null || stopLoss === null) {
+            if (isNaN(value)) {
+                showToast('لطفاً یک عدد وارد کنید', true);
                 return;
             }
 
-            // محاسبه مقدار ریسک به واحد پولی
-            const riskAmount = (balance * riskPercent) / 100;
+            if (value < 0 || value > 100) {
+                showToast('ضریب باید بین ۰ تا ۱۰۰ باشد', true);
+                return;
+            }
 
-            // محاسبه حجم معامله
-            // فرض: هر واحد حد ضرر برابر با 1% از حجم معامله است
-            // فرمول: حجم = (مقدار ریسک / حد ضرر) * 100
-            const positionSize = (riskAmount / stopLoss) * 100;
+            oddsArray.unshift(value); // Add to beginning
+            localStorage.setItem('diceOdds', JSON.stringify(oddsArray));
+            
+            input.value = '';
+            input.focus();
+            
+            updateUI();
+            showToast('ضریب ذخیره شد ✓');
+        }
 
-            // مقدار ضرر در صورت باخت (همان مقدار ریسک است)
-            const lossAmount = riskAmount;
+        // Analyze last 20 odds and count in each group
+        function analyzeOdds() {
+            const last20 = oddsArray.slice(0, 20);
+            const counts = new Array(groups.length).fill(0);
 
-            // نمایش نتایج
-            document.getElementById('positionSize').textContent = formatNumber(positionSize);
-            document.getElementById('lossAmount').textContent = formatNumber(lossAmount);
+            last20.forEach(odd => {
+                for (let i = 0; i < groups.length; i++) {
+                    const group = groups[i];
+                    // Include upper bound only for last group (90-100)
+                    if (i === groups.length - 1) {
+                        if (odd >= group.min && odd <= group.max) {
+                            counts[i]++;
+                            break;
+                        }
+                    } else {
+                        if (odd >= group.min && odd < group.max) {
+                            counts[i]++;
+                            break;
+                        }
+                    }
+                }
+            });
 
-            // نمایش بخش نتایج
-            results.classList.add('show');
+            return { counts, analyzedCount: last20.length };
+        }
 
-            // بررسی ریسک بالا
-            if (riskPercent > 5) {
-                warning.style.display = 'block';
-            } else {
-                warning.style.display = 'none';
+        // Update statistics table
+        function updateStatsTable() {
+            const { counts, analyzedCount } = analyzeOdds();
+            const tbody = document.getElementById('statsBody');
+            const countSpan = document.getElementById('analyzedCount');
+
+            countSpan.textContent = toPersianDigits(analyzedCount) + ' ضریب';
+
+            let html = '';
+            groups.forEach((group, index) => {
+                const count = counts[index];
+                let countClass = 'count-cell';
+                if (count === 0) countClass += ' count-zero';
+                if (count >= 4) countClass += ' count-high';
+
+                html += `
+                    <tr>
+                        <td>${group.label}</td>
+                        <td class="${countClass}">${toPersianDigits(count)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Update history display
+        function updateHistory() {
+            const container = document.getElementById('historyItems');
+
+            if (oddsArray.length === 0) {
+                container.innerHTML = '<div class="no-data">هنوز ضریبی ذخیره نشده است</div>';
+                return;
+            }
+
+            let html = '';
+            oddsArray.forEach((odd, index) => {
+                html += `<span class="history-item">${odd}</span>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Update all UI elements
+        function updateUI() {
+            updateStatsTable();
+            updateHistory();
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            if (oddsArray.length === 0) {
+                showToast('هیچ ضریبی برای دانلود وجود ندارد', true);
+                return;
+            }
+
+            try {
+                // Prepare data for Excel
+                const data = [
+                    ['ردیف', 'ضریب', 'تاریخ ثبت']
+                ];
+
+                const now = new Date();
+                oddsArray.forEach((odd, index) => {
+                    data.push([
+                        index + 1,
+                        odd,
+                        now.toLocaleDateString('fa-IR')
+                    ]);
+                });
+
+                // Add analysis summary
+                const { counts } = analyzeOdds();
+                data.push([]);
+                data.push(['تحلیل ۲۰ ضریب آخر']);
+                data.push(['بازه', 'تعداد']);
+                groups.forEach((group, index) => {
+                    data.push([`${group.min}-${group.max}`, counts[index]]);
+                });
+
+                // Create workbook
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'ضرایب دایس');
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 10 },
+                    { wch: 15 },
+                    { wch: 20 }
+                ];
+
+                // Generate and download file
+                const fileName = `dice-odds-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast('فایل اکسل دانلود شد ✓');
+            } catch (error) {
+                console.error('Excel export error:', error);
+                showToast('خطا در ساخت فایل اکسل', true);
             }
         }
 
-        // رویداد ارسال فرم
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            calculate();
+        // Clear all data
+        function clearAllData() {
+            if (oddsArray.length === 0) {
+                showToast('داده‌ای برای پاک کردن وجود ندارد', true);
+                return;
+            }
+
+            if (confirm('آیا مطمئن هستید که می‌خواهید همه ضرایب را پاک کنید؟')) {
+                oddsArray = [];
+                localStorage.removeItem('diceOdds');
+                updateUI();
+                showToast('همه داده‌ها پاک شدند');
+            }
+        }
+
+        // Handle Enter key press
+        document.getElementById('oddsInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveOdds();
+            }
         });
 
-        // محاسبه خودکار هنگام تغییر ورودی‌ها
-        ['balance', 'riskPercent', 'stopLoss'].forEach(id => {
-            document.getElementById(id).addEventListener('input', function() {
-                // فقط در صورتی که همه فیلدها پر شده باشند، محاسبه کن
-                const balance = document.getElementById('balance').value;
-                const riskPercent = document.getElementById('riskPercent').value;
-                const stopLoss = document.getElementById('stopLoss').value;
-
-                if (balance && riskPercent && stopLoss) {
-                    calculate();
-                }
-            });
+        // Initialize UI on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUI();
         });
-
-        // راهنمای استفاده روی موبایل
-        console.log(`
-╔══════════════════════════════════════════════════════════╗
-║  راهنمای استفاده روی موبایل:                            ║
-╠══════════════════════════════════════════════════════════╣
-║  1. فایل index.html را در موبایل خود باز کنید           ║
-║  2. یا فایل را از طریق ایمیل/تلگرام به موبایل بفرستید  ║
-║  3. فایل را با مرورگر موبایل (Chrome, Firefox, Safari) ║
-║     باز کنید                                             ║
-║  4. تمام قابلیت‌ها به صورت آفلاین کار می‌کنند          ║
-╚══════════════════════════════════════════════════════════╝
-        `);
     </script>
 </body>
 </html>

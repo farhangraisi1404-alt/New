@@ -1,0 +1,43 @@
+{
+    "name": "Ultra-Coder - دستیار هوشمند برنامه‌نویسی",
+    "short_name": "Ultra-Coder",
+    "description": "دستیار هوش مصنوعی فارسی‌زبان برای برنامه‌نویسی حرفه‌ای",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#0f0f1a",
+    "theme_color": "#6c5ce7",
+    "orientation": "portrait-primary",
+    "lang": "fa",
+    "dir": "rtl",
+    "categories": ["developer", "productivity", "utilities"],
+    "icons": [
+        {
+            "src": "icons/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "چت جدید",
+            "short_name": "چت",
+            "description": "شروع گفتگوی جدید",
+            "url": "./index.html?new=true",
+            "icons": [
+                {
+                    "src": "icons/icon.svg",
+                    "sizes": "96x96",
+                    "type": "image/svg+xml"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,242 @@
+<!--
+  Single-page Capital Management Calculator.
+  Enter account balance, per-trade risk percentage, and stop distance to estimate position size and potential loss.
+-->
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ماشین‌حساب مدیریت سرمایه</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --panel: #1e293b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #06b6d4;
+        --danger: #f87171;
+        font-size: clamp(14px, 1.5vw, 16px);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Vazirmatn", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #1d2a44, var(--bg));
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 2rem 1rem 4rem;
+      }
+
+      .app {
+        width: min(600px, 100%);
+        background: var(--panel);
+        border-radius: 18px;
+        padding: clamp(1.5rem, 4vw, 2.75rem);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 1.8rem;
+      }
+
+      p.subtitle {
+        margin-top: 0.4rem;
+        margin-bottom: 2rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      form {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        font-weight: 600;
+      }
+
+      input {
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text);
+        padding: 0.85rem 1rem;
+        border-radius: 10px;
+        font-size: 1rem;
+      }
+
+      input:focus {
+        outline: 2px solid var(--accent);
+        border-color: transparent;
+      }
+
+      button {
+        margin-top: 0.5rem;
+        background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+        color: #0f172a;
+        border: none;
+        border-radius: 10px;
+        padding: 0.95rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(14, 165, 233, 0.35);
+      }
+
+      .results {
+        margin-top: 2rem;
+        padding: 1.25rem;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .results div {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.05rem;
+      }
+
+      .warning {
+        margin-top: 1rem;
+        padding: 0.85rem;
+        border-radius: 10px;
+        background: rgba(248, 113, 113, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        color: var(--danger);
+        font-weight: 600;
+        display: none;
+      }
+
+      .info {
+        margin-top: 2rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <h1>ماشین‌حساب مدیریت سرمایه</h1>
+      <p class="subtitle">
+        مناسب معامله‌گران فارکس، کریپتو یا بازی‌های شانسی. فقط سه مقدار وارد
+        کنید تا حجم معامله و ریسک دلاری شما مشخص شود.
+      </p>
+
+      <form id="riskForm">
+        <label>
+          موجودی کل سرمایه (دلار)
+          <input
+            type="number"
+            id="balance"
+            min="0"
+            step="0.01"
+            placeholder="مثلاً 10000"
+            required
+          />
+        </label>
+
+        <label>
+          درصد ریسک در هر معامله
+          <input
+            type="number"
+            id="riskPercent"
+            min="0"
+            step="0.1"
+            placeholder="مثلاً 2"
+            required
+          />
+        </label>
+
+        <label>
+          حد ضرر (پیپ یا ضریب)
+          <input
+            type="number"
+            id="stopDistance"
+            min="0"
+            step="0.01"
+            placeholder="مثلاً 50"
+            required
+          />
+        </label>
+
+        <button type="submit">محاسبه</button>
+      </form>
+
+      <section class="results" aria-live="polite">
+        <div>
+          <span>حجم مجاز معامله:</span>
+          <strong id="positionSize">-</strong>
+        </div>
+        <div>
+          <span>مقدار پولی در ریسک:</span>
+          <strong id="riskAmount">-</strong>
+        </div>
+      </section>
+
+      <div class="warning" id="warningBox">
+        ⚠️ ریسک انتخابی بیش از ۵٪ است. لطفاً قبل از ادامه دقت کنید.
+      </div>
+
+      <p class="info">
+        برای اجرا روی موبایل کافیست همین فایل <code>index.html</code> را در گوشی
+        خود ذخیره کرده و مستقیماً با مرورگر باز کنید؛ نیازی به سرور نیست.
+      </p>
+    </main>
+
+    <script>
+      const form = document.getElementById("riskForm");
+      const balanceInput = document.getElementById("balance");
+      const riskPercentInput = document.getElementById("riskPercent");
+      const stopDistanceInput = document.getElementById("stopDistance");
+      const positionSizeOutput = document.getElementById("positionSize");
+      const riskAmountOutput = document.getElementById("riskAmount");
+      const warningBox = document.getElementById("warningBox");
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const balance = parseFloat(balanceInput.value);
+        const riskPercent = parseFloat(riskPercentInput.value);
+        const stopDistance = parseFloat(stopDistanceInput.value);
+
+        if (
+          [balance, riskPercent, stopDistance].some(
+            (value) => Number.isNaN(value) || value <= 0
+          )
+        ) {
+          alert("لطفاً همه ورودی‌ها را با اعداد معتبر پر کنید.");
+          return;
+        }
+
+        const riskAmount = (balance * riskPercent) / 100;
+        const positionSize = riskAmount / stopDistance;
+
+        riskAmountOutput.textContent = `${riskAmount.toFixed(2)} USD`;
+        positionSizeOutput.textContent = positionSize.toFixed(3);
+
+        warningBox.style.display = riskPercent > 5 ? "block" : "none";
+      });
+    </script>
+  </body>
+</html>

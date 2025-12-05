@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ultra-Coder">
+    <meta name="description" content="دستیار هوشمند برنامه‌نویسی فارسی - Ultra-Coder AI">
+    
+    <title>Ultra-Coder | دستیار هوش مصنوعی برنامه‌نویسی</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons - Using inline SVG data URI -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236c5ce7'/%3E%3Cstop offset='100%25' style='stop-color:%2300cec9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='36' fill='url(%23bg)'/%3E%3Ctext x='90' y='105' text-anchor='middle' font-size='90' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" sizes="152x152" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 152 152'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236c5ce7'/%3E%3Cstop offset='100%25' style='stop-color:%2300cec9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='152' height='152' rx='30' fill='url(%23bg)'/%3E%3Ctext x='76' y='90' text-anchor='middle' font-size='76' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236c5ce7'/%3E%3Cstop offset='100%25' style='stop-color:%2300cec9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='36' fill='url(%23bg)'/%3E%3Ctext x='90' y='105' text-anchor='middle' font-size='90' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" sizes="167x167" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 167 167'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236c5ce7'/%3E%3Cstop offset='100%25' style='stop-color:%2300cec9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='167' height='167' rx='33' fill='url(%23bg)'/%3E%3Ctext x='83' y='98' text-anchor='middle' font-size='83' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236c5ce7'/%3E%3Cstop offset='100%25' style='stop-color:%2300cec9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='6' fill='url(%23bg)'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --primary-dark: #5541d7;
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --bg-dark: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-input: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b2b2b2;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --error: #e17055;
+            --code-bg: #0d1117;
+            --border-radius: 16px;
+            --shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 80%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 206, 201, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(253, 121, 168, 0.08) 0%, transparent 40%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5%, -5%); }
+            50% { transform: translate(-10%, 0); }
+            75% { transform: translate(-5%, 5%); }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(26, 26, 46, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(108, 92, 231, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .logo-text h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(108, 92, 231, 0.2);
+            color: var(--primary-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(108, 92, 231, 0.1) 100%);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(108, 92, 231, 0.2);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome-card p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* Capability Cards */
+        .capabilities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .capability-card {
+            background: rgba(108, 92, 231, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(108, 92, 231, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .capability-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            background: rgba(108, 92, 231, 0.2);
+        }
+
+        .capability-card .icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .capability-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Chat Messages */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, var(--accent) 0%, #e056fd 100%);
+        }
+
+        .message-content {
+            max-width: 85%;
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 15px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+        }
+
+        .message-content p {
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-lang {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .code-copy {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .code-copy:hover {
+            background: rgba(108, 92, 231, 0.3);
+            color: var(--primary-light);
+        }
+
+        .code-content {
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .code-content code {
+            color: #e6e6e6;
+        }
+
+        /* Syntax Highlighting */
+        .keyword { color: #c678dd; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+        .comment { color: #5c6370; font-style: italic; }
+        .function { color: #61afef; }
+        .class { color: #e5c07b; }
+        .operator { color: #56b6c2; }
+
+        /* Input Area */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--bg-dark) 0%, rgba(15, 15, 26, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px 25px;
+            border-top: 1px solid rgba(108, 92, 231, 0.2);
+        }
+
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-box {
+            flex: 1;
+            background: var(--bg-input);
+            border-radius: 16px;
+            border: 2px solid rgba(108, 92, 231, 0.3);
+            padding: 12px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
+        }
+
+        .input-box textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            resize: none;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        .input-box textarea:focus {
+            outline: none;
+        }
+
+        .input-box textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-send {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(108, 92, 231, 0.5);
+        }
+
+        .btn-send:active {
+            transform: scale(0.95);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .quick-action {
+            background: rgba(108, 92, 231, 0.15);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            color: var(--primary-light);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .quick-action:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Settings Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--error);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .setting-item input,
+        .setting-item select {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+        }
+
+        .setting-item input:focus,
+        .setting-item select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            box-shadow: var(--shadow);
+            z-index: 300;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--error);
+        }
+
+        /* Projects List */
+        .projects-list {
+            margin-top: 15px;
+        }
+
+        .project-item {
+            background: rgba(108, 92, 231, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(108, 92, 231, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            border-color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .project-item h4 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* File Structure */
+        .file-structure {
+            background: var(--code-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .file-item {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item.folder {
+            color: var(--warning);
+        }
+
+        .file-item.file {
+            color: var(--text-primary);
+            padding-right: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .capabilities {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .welcome-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .header-content {
+                padding: 0 10px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(108, 92, 231, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(108, 92, 231, 0.5);
+        }
+
+        /* Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: none;
+            z-index: 150;
+            box-shadow: var(--shadow);
+        }
+
+        .install-prompt.show {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .install-prompt h4 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .install-prompt p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .install-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .install-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-install {
+            background: white;
+            color: var(--primary);
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-later {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* API Key Notice */
+        .api-notice {
+            background: rgba(253, 203, 110, 0.1);
+            border: 1px solid rgba(253, 203, 110, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .api-notice .icon {
+            font-size: 1.5rem;
+        }
+
+        .api-notice p {
+            font-size: 0.9rem;
+            color: var(--warning);
+        }
+
+        .api-notice a {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">
+                    <h1>Ultra-Coder</h1>
+                    <span>دستیار هوشمند برنامه‌نویسی</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="clearChat()" title="پاک کردن چت">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                </button>
+                <button class="btn-icon" onclick="openSettings()" title="تنظیمات">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div id="chatContainer" class="chat-container">
+            <!-- Welcome Card -->
+            <div class="welcome-card" id="welcomeCard">
+                <h2>👋 سلام! من Ultra-Coder هستم</h2>
+                <p>
+                    من دستیار هوشمند برنامه‌نویسی فارسی‌زبان شما هستم. می‌تونم در ساخت پروژه از صفر، رفع باگ، بهینه‌سازی کد و هر چالش برنامه‌نویسی دیگه‌ای کمکتون کنم.
+                </p>
+                
+                <div class="capabilities">
+                    <div class="capability-card">
+                        <div class="icon">🚀</div>
+                        <h4>ساخت پروژه</h4>
+                    </div>
+                    <div class="capability-card">
+                        <div class="icon">🔧</div>
+                        <h4>رفع باگ</h4>
+                    </div>
+                    <div class="capability-card">
+                        <div class="icon">⚡</div>
+                        <h4>بهینه‌سازی</h4>
+                    </div>
+                    <div class="capability-card">
+                        <div class="icon">📱</div>
+                        <h4>اپ موبایل</h4>
+                    </div>
+                </div>
+
+                <div class="api-notice" id="apiNotice">
+                    <div class="icon">🔑</div>
+                    <p>
+                        برای استفاده، لطفاً <a href="#" onclick="openSettings()">API Key</a> خود را در تنظیمات وارد کنید.
+                        می‌توانید از OpenAI، Anthropic یا سایر ارائه‌دهندگان استفاده کنید.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Input Area -->
+    <div class="input-container">
+        <div class="quick-actions" id="quickActions">
+            <button class="quick-action" onclick="insertQuickAction('یک پروژه React بساز')">🚀 پروژه React</button>
+            <button class="quick-action" onclick="insertQuickAction('یک API با FastAPI بساز')">⚡ FastAPI</button>
+            <button class="quick-action" onclick="insertQuickAction('کد زیر رو بهینه کن:')">🔧 بهینه‌سازی</button>
+            <button class="quick-action" onclick="insertQuickAction('باگ این کد رو پیدا کن:')">🐛 رفع باگ</button>
+            <button class="quick-action" onclick="insertQuickAction('این کد رو توضیح بده:')">📖 توضیح کد</button>
+        </div>
+        <div class="input-wrapper">
+            <div class="input-box">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="پیام خود را بنویسید... (مثلاً: یک اپ Todo با React بساز)"
+                    rows="1"
+                    oninput="autoResize(this)"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+            </div>
+            <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>⚙️ تنظیمات</h3>
+                <button class="modal-close" onclick="closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>ارائه‌دهنده API</label>
+                    <select id="apiProvider" onchange="updateApiSettings()">
+                        <option value="openai">OpenAI (GPT-4)</option>
+                        <option value="anthropic">Anthropic (Claude)</option>
+                        <option value="openrouter">OpenRouter</option>
+                        <option value="groq">Groq</option>
+                        <option value="together">Together AI</option>
+                        <option value="custom">سفارشی</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>API Key</label>
+                    <input type="password" id="apiKey" placeholder="کلید API خود را وارد کنید">
+                </div>
+                <div class="setting-item" id="customEndpointSetting" style="display: none;">
+                    <label>آدرس API سفارشی</label>
+                    <input type="text" id="customEndpoint" placeholder="https://api.example.com/v1/chat/completions">
+                </div>
+                <div class="setting-item">
+                    <label>مدل</label>
+                    <select id="modelSelect">
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                    </select>
+                </div>
+                <button class="btn-save" onclick="saveSettings()">ذخیره تنظیمات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <h4>📲 نصب اپلیکیشن</h4>
+        <p>Ultra-Coder را به صفحه اصلی گوشی خود اضافه کنید تا دسترسی سریع‌تری داشته باشید.</p>
+        <div class="install-buttons">
+            <button class="btn-install" onclick="installApp()">نصب</button>
+            <button class="btn-later" onclick="dismissInstall()">بعداً</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State Management
+        let state = {
+            messages: [],
+            settings: {
+                apiProvider: 'openai',
+                apiKey: '',
+                customEndpoint: '',
+                model: 'gpt-4o'
+            },
+            isLoading: false
+        };
+
+        // System Prompt for Ultra-Coder
+        const SYSTEM_PROMPT = `تو یک برنامه‌نویس فوق‌پیشرفته و حرفه‌ای به نام Ultra-Coder هستی. ویژگی‌های تو:
+
+🎯 هویت:
+- نام: Ultra-Coder
+- زبان اصلی: فارسی روان و حرفه‌ای
+- تخصص: تولید کد کامل، دقیق، تمیز و کاربردی
+
+🧠 توانایی‌ها:
+1. ساخت پروژه از صفر (React, React Native, Flutter, Next.js, Django, Flask, FastAPI, Node.js)
+2. ویرایش و توسعه پروژه‌های موجود
+3. الگوریتم‌ها و معماری نرم‌افزار
+4. مدل‌سازی داده و پایگاه داده
+5. احراز هویت و امنیت
+6. بهینه‌سازی Performance
+7. رفع باگ و Refactoring
+
+📋 قوانین رفتاری:
+1. همیشه کد کامل و قابل اجرا بنویس
+2. هیچ بخشی را "خودت تکمیل کن" نگذار
+3. از نام‌گذاری استاندارد استفاده کن
+4. تمام import ها را بنویس
+5. برای هر مشکل 2-3 راه‌حل جایگزین پیشنهاد بده
+6. توضیحات کوتاه و روشن بنویس
+7. اگر دستور مبهم بود، سؤال بپرس
+8. اگر راه‌حل بهتری وجود داشت، پیشنهاد بده
+9. ساختار پروژه را پیشنهاد و بساز
+10. هر فایل را در بلوک کد مجزا بنویس
+
+💡 فرمت پاسخ:
+- از markdown استفاده کن
+- کدها را در بلوک \`\`\` قرار بده
+- نام فایل را در بالای هر بلوک کد بنویس
+- ساختار پوشه‌ها را نمایش بده`;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadMessages();
+            checkInstallPrompt();
+        });
+
+        // Load saved settings
+        function loadSettings() {
+            const saved = localStorage.getItem('ultraCoderSettings');
+            if (saved) {
+                state.settings = JSON.parse(saved);
+                document.getElementById('apiProvider').value = state.settings.apiProvider;
+                document.getElementById('apiKey').value = state.settings.apiKey;
+                document.getElementById('customEndpoint').value = state.settings.customEndpoint || '';
+                document.getElementById('modelSelect').value = state.settings.model;
+                updateApiSettings();
+                
+                if (state.settings.apiKey) {
+                    document.getElementById('apiNotice').style.display = 'none';
+                }
+            }
+        }
+
+        // Load saved messages
+        function loadMessages() {
+            const saved = localStorage.getItem('ultraCoderMessages');
+            if (saved) {
+                state.messages = JSON.parse(saved);
+                renderMessages();
+            }
+        }
+
+        // Save messages
+        function saveMessages() {
+            localStorage.setItem('ultraCoderMessages', JSON.stringify(state.messages));
+        }
+
+        // Save settings
+        function saveSettings() {
+            state.settings = {
+                apiProvider: document.getElementById('apiProvider').value,
+                apiKey: document.getElementById('apiKey').value,
+                customEndpoint: document.getElementById('customEndpoint').value,
+                model: document.getElementById('modelSelect').value
+            };
+            localStorage.setItem('ultraCoderSettings', JSON.stringify(state.settings));
+            closeSettings();
+            showToast('تنظیمات ذخیره شد ✓', 'success');
+            
+            if (state.settings.apiKey) {
+                document.getElementById('apiNotice').style.display = 'none';
+            }
+        }
+
+        // Update API settings UI
+        function updateApiSettings() {
+            const provider = document.getElementById('apiProvider').value;
+            const customEndpoint = document.getElementById('customEndpointSetting');
+            const modelSelect = document.getElementById('modelSelect');
+            
+            customEndpoint.style.display = provider === 'custom' ? 'block' : 'none';
+            
+            // Update model options based on provider
+            const models = {
+                openai: [
+                    { value: 'gpt-4o', label: 'GPT-4o' },
+                    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+                    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+                    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+                ],
+                anthropic: [
+                    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+                    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+                    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' }
+                ],
+                openrouter: [
+                    { value: 'openai/gpt-4o', label: 'GPT-4o' },
+                    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+                    { value: 'google/gemini-pro', label: 'Gemini Pro' },
+                    { value: 'meta-llama/llama-3-70b-instruct', label: 'Llama 3 70B' }
+                ],
+                groq: [
+                    { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B' },
+                    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B' },
+                    { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' }
+                ],
+                together: [
+                    { value: 'meta-llama/Llama-3-70b-chat-hf', label: 'Llama 3 70B' },
+                    { value: 'mistralai/Mixtral-8x7B-Instruct-v0.1', label: 'Mixtral 8x7B' },
+                    { value: 'togethercomputer/CodeLlama-34b-Instruct', label: 'CodeLlama 34B' }
+                ],
+                custom: [
+                    { value: 'custom', label: 'مدل سفارشی' }
+                ]
+            };
+            
+            modelSelect.innerHTML = models[provider].map(m => 
+                `<option value="${m.value}">${m.label}</option>`
+            ).join('');
+        }
+
+        // Get API endpoint
+        function getApiEndpoint() {
+            const provider = state.settings.apiProvider;
+            const endpoints = {
+                openai: 'https://api.openai.com/v1/chat/completions',
+                anthropic: 'https://api.anthropic.com/v1/messages',
+                openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+                groq: 'https://api.groq.com/openai/v1/chat/completions',
+                together: 'https://api.together.xyz/v1/chat/completions',
+                custom: state.settings.customEndpoint
+            };
+            return endpoints[provider];
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || state.isLoading) return;
+            
+            if (!state.settings.apiKey) {
+                showToast('لطفاً ابتدا API Key را در تنظیمات وارد کنید', 'error');
+                openSettings();
+                return;
+            }
+            
+            // Hide welcome card
+            const welcomeCard = document.getElementById('welcomeCard');
+            if (welcomeCard) {
+                welcomeCard.style.display = 'none';
+            }
+            
+            // Add user message
+            state.messages.push({ role: 'user', content: message });
+            renderMessages();
+            input.value = '';
+            autoResize(input);
+            
+            // Show loading
+            state.isLoading = true;
+            document.getElementById('sendBtn').disabled = true;
+            showTypingIndicator();
+            
+            try {
+                const response = await callAPI(message);
+                state.messages.push({ role: 'assistant', content: response });
+            } catch (error) {
+                console.error('API Error:', error);
+                state.messages.push({ 
+                    role: 'assistant', 
+                    content: `❌ خطا در ارتباط با API: ${error.message}\n\nلطفاً تنظیمات و API Key خود را بررسی کنید.` 
+                });
+            }
+            
+            hideTypingIndicator();
+            state.isLoading = false;
+            document.getElementById('sendBtn').disabled = false;
+            renderMessages();
+            saveMessages();
+        }
+
+        // Call API
+        async function callAPI(message) {
+            const provider = state.settings.apiProvider;
+            const endpoint = getApiEndpoint();
+            
+            // Build messages array
+            const messages = [
+                { role: 'system', content: SYSTEM_PROMPT },
+                ...state.messages.map(m => ({
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    content: m.content
+                }))
+            ];
+            
+            let headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            let body = {};
+            
+            if (provider === 'anthropic') {
+                headers['x-api-key'] = state.settings.apiKey;
+                headers['anthropic-version'] = '2023-06-01';
+                headers['anthropic-dangerous-direct-browser-access'] = 'true';
+                
+                body = {
+                    model: state.settings.model,
+                    max_tokens: 4096,
+                    system: SYSTEM_PROMPT,
+                    messages: messages.filter(m => m.role !== 'system').map(m => ({
+                        role: m.role,
+                        content: m.content
+                    }))
+                };
+            } else {
+                headers['Authorization'] = `Bearer ${state.settings.apiKey}`;
+                
+                if (provider === 'openrouter') {
+                    headers['HTTP-Referer'] = window.location.href;
+                    headers['X-Title'] = 'Ultra-Coder';
+                }
+                
+                body = {
+                    model: state.settings.model,
+                    messages: messages,
+                    max_tokens: 4096,
+                    temperature: 0.7
+                };
+            }
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error?.message || `HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (provider === 'anthropic') {
+                return data.content[0].text;
+            } else {
+                return data.choices[0].message.content;
+            }
+        }
+
+        // Render messages
+        function renderMessages() {
+            const container = document.getElementById('chatContainer');
+            const welcomeCard = document.getElementById('welcomeCard');
+            
+            // Keep welcome card if no messages
+            let html = '';
+            if (state.messages.length === 0 && welcomeCard) {
+                html = welcomeCard.outerHTML;
+            }
+            
+            html += state.messages.map(msg => {
+                const isUser = msg.role === 'user';
+                const avatar = isUser ? '👤' : '⚡';
+                const content = formatMessage(msg.content);
+                
+                return `
+                    <div class="message ${isUser ? 'user' : 'assistant'}">
+                        <div class="message-avatar">${avatar}</div>
+                        <div class="message-content">${content}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+            
+            // Add copy functionality to code blocks
+            document.querySelectorAll('.code-copy').forEach(btn => {
+                btn.onclick = () => {
+                    const code = btn.closest('.code-block').querySelector('code').textContent;
+                    navigator.clipboard.writeText(code);
+                    btn.textContent = 'کپی شد ✓';
+                    setTimeout(() => btn.textContent = 'کپی', 2000);
+                };
+            });
+        }
+
+        // Format message with markdown
+        function formatMessage(text) {
+            // Escape HTML
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Code blocks
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                lang = lang || 'code';
+                return `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">${lang}</span>
+                        <button class="code-copy">کپی</button>
+                    </div>
+                    <div class="code-content"><code>${highlightSyntax(code.trim(), lang)}</code></div>
+                </div>`;
+            });
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code style="background: rgba(108,92,231,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+            
+            // Bold
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            
+            // Headers
+            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 15px 0 10px; color: var(--secondary);">$1</h4>');
+            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 15px 0 10px; color: var(--primary-light);">$1</h3>');
+            text = text.replace(/^# (.+)$/gm, '<h2 style="margin: 15px 0 10px;">$1</h2>');
+            
+            // Lists
+            text = text.replace(/^- (.+)$/gm, '<li style="margin: 5px 0; margin-right: 20px;">$1</li>');
+            text = text.replace(/^(\d+)\. (.+)$/gm, '<li style="margin: 5px 0; margin-right: 20px;">$2</li>');
+            
+            // Line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return `<p>${text}</p>`;
+        }
+
+        // Simple syntax highlighting
+        function highlightSyntax(code, lang) {
+            // Keywords
+            const keywords = ['function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'return', 'import', 'export', 'from', 'class', 'extends', 'async', 'await', 'try', 'catch', 'throw', 'new', 'this', 'super', 'static', 'public', 'private', 'protected', 'interface', 'type', 'enum', 'def', 'print', 'self', 'True', 'False', 'None', 'and', 'or', 'not', 'in', 'is', 'lambda', 'with', 'as', 'raise', 'except', 'finally', 'pass', 'break', 'continue', 'global', 'nonlocal', 'assert', 'yield', 'del'];
+            
+            // Escape special regex chars in code for safe replacement
+            let result = code;
+            
+            // Strings (single and double quotes)
+            result = result.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="string">$&</span>');
+            
+            // Comments
+            result = result.replace(/(\/\/.*$|#.*$)/gm, '<span class="comment">$&</span>');
+            result = result.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$&</span>');
+            
+            // Numbers
+            result = result.replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>');
+            
+            // Keywords
+            keywords.forEach(kw => {
+                const regex = new RegExp(`\\b(${kw})\\b`, 'g');
+                result = result.replace(regex, '<span class="keyword">$1</span>');
+            });
+            
+            // Functions
+            result = result.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g, '<span class="function">$1</span>(');
+            
+            return result;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const container = document.getElementById('chatContainer');
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message assistant';
+            indicator.innerHTML = `
+                <div class="message-avatar">⚡</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Auto resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        // Handle keyboard
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Quick actions
+        function insertQuickAction(text) {
+            const input = document.getElementById('messageInput');
+            input.value = text;
+            input.focus();
+            autoResize(input);
+        }
+
+        // Clear chat
+        function clearChat() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید تمام چت را پاک کنید؟')) {
+                state.messages = [];
+                localStorage.removeItem('ultraCoderMessages');
+                location.reload();
+            }
+        }
+
+        // Settings modal
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // PWA Install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+
+        function checkInstallPrompt() {
+            // Show iOS install instructions
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            
+            if (isIOS && !isStandalone) {
+                setTimeout(() => {
+                    const prompt = document.getElementById('installPrompt');
+                    prompt.innerHTML = `
+                        <h4>📲 نصب در آیفون</h4>
+                        <p>برای نصب: دکمه اشتراک‌گذاری (Share) را بزنید و سپس "Add to Home Screen" را انتخاب کنید.</p>
+                        <div class="install-buttons">
+                            <button class="btn-later" onclick="dismissInstall()">متوجه شدم</button>
+                        </div>
+                    `;
+                    prompt.classList.add('show');
+                }, 2000);
+            }
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((result) => {
+                    if (result.outcome === 'accepted') {
+                        showToast('اپلیکیشن نصب شد! ✓', 'success');
+                    }
+                    deferredPrompt = null;
+                    dismissInstall();
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('settingsModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeSettings();
+            }
+        });
+    </script>
+</body>
+</html>

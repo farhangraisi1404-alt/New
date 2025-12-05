@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ماشین‌حساب مدیریت سرمایه</title>
+    <style>
+        /*
+         * ماشین‌حساب مدیریت سرمایه برای معاملات
+         * 
+         * این وب‌اپلیکیشن به شما کمک می‌کند تا:
+         * - حجم مناسب برای هر معامله را محاسبه کنید
+         * - مقدار ریسک در هر معامله را کنترل کنید
+         * - از سرمایه خود محافظت کنید
+         * 
+         * نحوه استفاده:
+         * 1. موجودی کل سرمایه خود را وارد کنید
+         * 2. درصد ریسک مورد نظر (معمولاً 1-3%) را وارد کنید
+         * 3. حد ضرر (فاصله تا استاپ در پیپ یا ضریب بازی) را وارد کنید
+         * 4. نتایج به صورت خودکار محاسبه می‌شود
+         * 
+         * برای اجرا روی موبایل:
+         * - فایل index.html را در مرورگر موبایل خود باز کنید
+         * - یا فایل را به موبایل منتقل کرده و با مرورگر باز کنید
+         */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #0f1419;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid #2a2a3e;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #90a4ae;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0bec5;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1f2e;
+            border: 2px solid #2a3a4e;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            background: #1f2535;
+        }
+
+        input[type="number"]::placeholder {
+            color: #607d8b;
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: #78909c;
+            margin-top: 5px;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0f1419;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 195, 247, 0.4);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #2a2a3e;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            background: #1a1f2e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-right: 4px solid #4fc3f7;
+        }
+
+        .result-label {
+            font-size: 13px;
+            color: #90a4ae;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 22px;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        .warning {
+            background: #ff6b6b;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .result-value {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 ماشین‌حساب مدیریت سرمایه</h1>
+        <p class="subtitle">محاسبه حجم معامله و مدیریت ریسک</p>
+
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="balance">موجودی کل سرمایه (ریال یا دلار)</label>
+                <input type="number" id="balance" placeholder="مثال: 1000000" step="0.01" min="0">
+                <div class="error" id="balanceError">لطفاً یک عدد معتبر وارد کنید</div>
+            </div>
+
+            <div class="form-group">
+                <label for="riskPercent">درصد ریسک در هر معامله</label>
+                <input type="number" id="riskPercent" placeholder="مثال: 2" step="0.1" min="0" max="100">
+                <div class="input-hint">معمولاً بین 1 تا 3 درصد توصیه می‌شود</div>
+                <div class="error" id="riskPercentError">لطفاً یک عدد معتبر وارد کنید</div>
+            </div>
+
+            <div class="form-group">
+                <label for="stopLoss">حد ضرر (پیپ یا ضریب)</label>
+                <input type="number" id="stopLoss" placeholder="مثال: 50" step="0.01" min="0.01">
+                <div class="input-hint">فاصله تا استاپ در پیپ (فارکس) یا ضریب بازی</div>
+                <div class="error" id="stopLossError">لطفاً یک عدد معتبر وارد کنید</div>
+            </div>
+
+            <button type="submit" class="calculate-btn">محاسبه</button>
+        </form>
+
+        <div class="results" id="results">
+            <div class="result-item">
+                <div class="result-label">حجم مجاز معامله</div>
+                <div class="result-value" id="positionSize">-</div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">مقدار ضرر در صورت باخت</div>
+                <div class="result-value" id="lossAmount">-</div>
+            </div>
+
+            <div id="warning" class="warning" style="display: none;">
+                ⚠️ هشدار: ریسک شما بیشتر از 5% است! این مقدار ریسک بالایی است.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * اسکریپت محاسبه مدیریت سرمایه
+         * 
+         * این اسکریپت:
+         * - ورودی‌های کاربر را اعتبارسنجی می‌کند
+         * - حجم معامله را بر اساس ریسک محاسبه می‌کند
+         * - مقدار ضرر احتمالی را محاسبه می‌کند
+         * - در صورت ریسک بالا (>5%) هشدار نمایش می‌دهد
+         */
+
+        const form = document.getElementById('calculatorForm');
+        const results = document.getElementById('results');
+        const warning = document.getElementById('warning');
+
+        // تابع اعتبارسنجی ورودی
+        function validateInput(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            const value = parseFloat(input.value);
+
+            if (isNaN(value) || value <= 0) {
+                input.style.borderColor = '#ff6b6b';
+                error.classList.add('show');
+                return null;
+            } else {
+                input.style.borderColor = '#2a3a4e';
+                error.classList.remove('show');
+                return value;
+            }
+        }
+
+        // تابع فرمت اعداد
+        function formatNumber(num) {
+            return new Intl.NumberFormat('fa-IR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(num);
+        }
+
+        // تابع محاسبه
+        function calculate() {
+            // اعتبارسنجی ورودی‌ها
+            const balance = validateInput('balance', 'balanceError');
+            const riskPercent = validateInput('riskPercent', 'riskPercentError');
+            const stopLoss = validateInput('stopLoss', 'stopLossError');
+
+            // اگر ورودی‌ها معتبر نباشند، محاسبه نکن
+            if (balance === null || riskPercent === null || stopLoss === null) {
+                return;
+            }
+
+            // محاسبه مقدار ریسک به واحد پولی
+            const riskAmount = (balance * riskPercent) / 100;
+
+            // محاسبه حجم معامله
+            // فرض: هر واحد حد ضرر برابر با 1% از حجم معامله است
+            // فرمول: حجم = (مقدار ریسک / حد ضرر) * 100
+            const positionSize = (riskAmount / stopLoss) * 100;
+
+            // مقدار ضرر در صورت باخت (همان مقدار ریسک است)
+            const lossAmount = riskAmount;
+
+            // نمایش نتایج
+            document.getElementById('positionSize').textContent = formatNumber(positionSize);
+            document.getElementById('lossAmount').textContent = formatNumber(lossAmount);
+
+            // نمایش بخش نتایج
+            results.classList.add('show');
+
+            // بررسی ریسک بالا
+            if (riskPercent > 5) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        // رویداد ارسال فرم
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculate();
+        });
+
+        // محاسبه خودکار هنگام تغییر ورودی‌ها
+        ['balance', 'riskPercent', 'stopLoss'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                // فقط در صورتی که همه فیلدها پر شده باشند، محاسبه کن
+                const balance = document.getElementById('balance').value;
+                const riskPercent = document.getElementById('riskPercent').value;
+                const stopLoss = document.getElementById('stopLoss').value;
+
+                if (balance && riskPercent && stopLoss) {
+                    calculate();
+                }
+            });
+        });
+
+        // راهنمای استفاده روی موبایل
+        console.log(`
+╔══════════════════════════════════════════════════════════╗
+║  راهنمای استفاده روی موبایل:                            ║
+╠══════════════════════════════════════════════════════════╣
+║  1. فایل index.html را در موبایل خود باز کنید           ║
+║  2. یا فایل را از طریق ایمیل/تلگرام به موبایل بفرستید  ║
+║  3. فایل را با مرورگر موبایل (Chrome, Firefox, Safari) ║
+║     باز کنید                                             ║
+║  4. تمام قابلیت‌ها به صورت آفلاین کار می‌کنند          ║
+╚══════════════════════════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>

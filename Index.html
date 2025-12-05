@@ -1,2 +1,567 @@
-index.html
-2index.html
+<!--
+==========================================
+    Capital Management Calculator
+    ماشین‌حساب مدیریت سرمایه
+==========================================
+
+این وب‌اپ یک ابزار ساده برای محاسبه حجم معامله و مدیریت ریسک است.
+مناسب برای معامله‌گران فارکس، کریپتو یا بازی‌های شانسی.
+
+ورودی‌ها:
+  - موجودی کل (Balance): مبلغ کل سرمایه شما
+  - درصد ریسک (Risk %): چند درصد از سرمایه را می‌خواهید ریسک کنید
+  - حد ضرر (Stop Loss): فاصله تا استاپ به پیپ یا ضریب بازی
+
+خروجی‌ها:
+  - حجم مجاز معامله (Position Size)
+  - مبلغ در معرض ریسک (Amount at Risk)
+  - هشدار در صورت ریسک بیش از 5%
+
+نحوه اجرا روی موبایل:
+  1. این فایل را در گوشی ذخیره کنید
+  2. با مرورگر (Chrome, Safari, Firefox) فایل را باز کنید
+  3. یا فایل را روی هاست آپلود کنید و با لینک باز کنید
+
+==========================================
+-->
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ماشین‌حساب مدیریت سرمایه | Capital Management Calculator</title>
+    <style>
+        /* ========== CSS Reset & Base ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --accent-blue: #388bfd;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --border-color: #30363d;
+            --input-bg: #0d1117;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ========== Container ========== */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* ========== Header ========== */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ========== Card ========== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--accent-green);
+            border-radius: 2px;
+        }
+
+        /* ========== Form Elements ========== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.2);
+        }
+
+        input[type="number"]::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* Remove spinners from number inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* ========== Button ========== */
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background: var(--accent-green-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ========== Results ========== */
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .result-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .result-value.risk {
+            color: var(--accent-orange);
+        }
+
+        /* ========== Warning ========== */
+        .warning {
+            display: none;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            color: var(--accent-red);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .warning.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .warning-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        /* ========== Error State ========== */
+        .error-message {
+            display: none;
+            color: var(--accent-red);
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        .form-group.error input {
+            border-color: var(--accent-red);
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* ========== Footer ========== */
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        /* ========== Info Tooltip ========== */
+        .info-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .info-box h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .info-box ul {
+            padding-right: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 6px;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            input[type="number"] {
+                padding: 12px 14px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .header {
+                padding: 40px 0;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📊 ماشین‌حساب مدیریت سرمایه</h1>
+            <p>Capital Management Calculator</p>
+        </header>
+
+        <!-- Input Card -->
+        <div class="card">
+            <h2 class="card-title">ورودی‌ها</h2>
+            
+            <div class="form-group" id="balanceGroup">
+                <label for="balance">💰 موجودی کل (Balance)</label>
+                <input type="number" id="balance" placeholder="مثال: 10000" step="any" min="0">
+                <span class="error-message">لطفاً موجودی را وارد کنید</span>
+            </div>
+
+            <div class="form-group" id="riskGroup">
+                <label for="riskPercent">⚠️ درصد ریسک (Risk %)</label>
+                <input type="number" id="riskPercent" placeholder="مثال: 2" step="any" min="0" max="100">
+                <span class="error-message">لطفاً درصد ریسک را وارد کنید (0-100)</span>
+            </div>
+
+            <div class="form-group" id="stopLossGroup">
+                <label for="stopLoss">🛑 حد ضرر (پیپ یا ضریب)</label>
+                <input type="number" id="stopLoss" placeholder="مثال: 50" step="any" min="0">
+                <span class="error-message">لطفاً حد ضرر را وارد کنید</span>
+            </div>
+
+            <button class="btn" onclick="calculate()">
+                محاسبه کن 🚀
+            </button>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card results" id="results">
+            <h2 class="card-title">نتایج</h2>
+            
+            <div class="result-item">
+                <span class="result-label">حجم مجاز معامله</span>
+                <span class="result-value" id="positionSize">-</span>
+            </div>
+
+            <div class="result-item">
+                <span class="result-label">مبلغ در معرض ریسک</span>
+                <span class="result-value risk" id="amountAtRisk">-</span>
+            </div>
+
+            <div class="result-item">
+                <span class="result-label">درصد ریسک واقعی</span>
+                <span class="result-value" id="actualRisk">-</span>
+            </div>
+
+            <!-- Warning -->
+            <div class="warning" id="warning">
+                <div class="warning-icon">⚠️</div>
+                <strong>هشدار!</strong><br>
+                ریسک شما بیش از 5% است. این می‌تواند خطرناک باشد!
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h4>📖 راهنمای استفاده:</h4>
+            <ul>
+                <li><strong>موجودی:</strong> کل پولی که در حساب دارید</li>
+                <li><strong>درصد ریسک:</strong> چند درصد از سرمایه را می‌خواهید در هر معامله ریسک کنید (توصیه: 1-2%)</li>
+                <li><strong>حد ضرر:</strong> فاصله تا استاپ‌لاس به پیپ، یا ضریب بازی</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🔒 تمام محاسبات به صورت محلی در مرورگر شما انجام می‌شود</p>
+            <p style="margin-top: 8px;">Made with ❤️ for Traders</p>
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================
+        // Capital Management Calculator - JavaScript
+        // ==========================================
+
+        /**
+         * اعتبارسنجی ورودی
+         * @param {string} inputId - آیدی اینپوت
+         * @param {string} groupId - آیدی گروه فرم
+         * @returns {number|null} - مقدار عددی یا null در صورت خطا
+         */
+        function validateInput(inputId, groupId) {
+            const input = document.getElementById(inputId);
+            const group = document.getElementById(groupId);
+            const value = parseFloat(input.value);
+
+            // بررسی خالی بودن یا نامعتبر بودن
+            if (input.value === '' || isNaN(value) || value < 0) {
+                group.classList.add('error');
+                return null;
+            }
+
+            // بررسی محدوده درصد ریسک
+            if (inputId === 'riskPercent' && value > 100) {
+                group.classList.add('error');
+                return null;
+            }
+
+            group.classList.remove('error');
+            return value;
+        }
+
+        /**
+         * حذف حالت خطا هنگام تایپ
+         */
+        function clearError(groupId) {
+            document.getElementById(groupId).classList.remove('error');
+        }
+
+        // اضافه کردن event listener برای حذف خطا هنگام تایپ
+        document.getElementById('balance').addEventListener('input', () => clearError('balanceGroup'));
+        document.getElementById('riskPercent').addEventListener('input', () => clearError('riskGroup'));
+        document.getElementById('stopLoss').addEventListener('input', () => clearError('stopLossGroup'));
+
+        /**
+         * فرمت کردن اعداد با جداکننده هزارگان
+         * @param {number} num - عدد
+         * @param {number} decimals - تعداد رقم اعشار
+         * @returns {string} - عدد فرمت شده
+         */
+        function formatNumber(num, decimals = 2) {
+            return num.toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        /**
+         * محاسبه اصلی
+         */
+        function calculate() {
+            // اعتبارسنجی همه ورودی‌ها
+            const balance = validateInput('balance', 'balanceGroup');
+            const riskPercent = validateInput('riskPercent', 'riskGroup');
+            const stopLoss = validateInput('stopLoss', 'stopLossGroup');
+
+            // اگر هر ورودی نامعتبر بود، متوقف شو
+            if (balance === null || riskPercent === null || stopLoss === null) {
+                document.getElementById('results').classList.remove('show');
+                return;
+            }
+
+            // بررسی صفر بودن حد ضرر
+            if (stopLoss === 0) {
+                document.getElementById('stopLossGroup').classList.add('error');
+                document.getElementById('results').classList.remove('show');
+                return;
+            }
+
+            // ========== محاسبات ==========
+            
+            // مبلغ در معرض ریسک = موجودی × درصد ریسک / 100
+            const amountAtRisk = balance * (riskPercent / 100);
+            
+            // حجم مجاز معامله = مبلغ در معرض ریسک / حد ضرر
+            const positionSize = amountAtRisk / stopLoss;
+            
+            // درصد ریسک واقعی
+            const actualRisk = riskPercent;
+
+            // ========== نمایش نتایج ==========
+            
+            document.getElementById('positionSize').textContent = formatNumber(positionSize, 4);
+            document.getElementById('amountAtRisk').textContent = formatNumber(amountAtRisk, 2);
+            document.getElementById('actualRisk').textContent = formatNumber(actualRisk, 2) + '%';
+
+            // نمایش کارت نتایج
+            document.getElementById('results').classList.add('show');
+
+            // بررسی هشدار ریسک بالا
+            const warning = document.getElementById('warning');
+            if (riskPercent > 5) {
+                warning.classList.add('show');
+            } else {
+                warning.classList.remove('show');
+            }
+
+            // اسکرول به نتایج در موبایل
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+            }, 100);
+        }
+
+        // اجرای محاسبه با فشردن Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculate();
+            }
+        });
+
+        // جلوگیری از اسکرول با ورودی عددی در موبایل
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('wheel', function(e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>

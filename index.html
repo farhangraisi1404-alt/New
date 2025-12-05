@@ -1,0 +1,330 @@
+<!-- Capital Management Calculator: A single-file SPA that estimates safe position sizing by combining balance, risk percentage, and stop-loss distance. -->
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ماشین‌حساب مدیریت سرمایه</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.25);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --warning: #f97316;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Vazirmatn", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.1), transparent 35%), var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem clamp(1rem, 4vw, 3rem);
+    }
+
+    .app-shell {
+      width: min(960px, 100%);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 1.25rem;
+      padding: clamp(1.5rem, 3vw, 2.5rem);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(12px);
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      color: var(--text);
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding: 1rem;
+      border-radius: 0.9rem;
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    label {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    input[type="number"] {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text);
+      border-radius: 0.65rem;
+      padding: 0.75rem 0.85rem;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    button {
+      grid-column: 1 / -1;
+      padding: 0.95rem 1.2rem;
+      background: linear-gradient(120deg, var(--accent), #0ea5e9);
+      color: #0f172a;
+      border: none;
+      border-radius: 0.9rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover,
+    button:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 15px 25px rgba(14, 165, 233, 0.35);
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .card h3 {
+      margin: 0 0 0.45rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .alert {
+      grid-column: 1 / -1;
+      padding: 1rem 1.25rem;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--warning);
+      display: none;
+    }
+
+    .alert.active {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .error-message {
+      grid-column: 1 / -1;
+      color: var(--danger);
+      margin: 0.2rem 0 0;
+      min-height: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    .how-to {
+      margin-top: 2rem;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px dashed rgba(148, 163, 184, 0.25);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1.25rem;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <h1>ماشین‌حساب مدیریت سرمایه</h1>
+      <p>برای هر معامله فقط درصد کوچکی از سرمایه را درگیر کنید تا باخت‌های متوالی سرمایهٔ کلی‌تان را تهدید نکند.</p>
+    </header>
+
+    <form id="risk-form" novalidate>
+      <div class="field">
+        <label for="balance">موجودی کل سرمایه (مثلاً دلار)</label>
+        <input id="balance" name="balance" type="number" min="0" step="0.01" placeholder="10000" required />
+        <span class="error-message" data-error-for="balance"></span>
+      </div>
+
+      <div class="field">
+        <label for="riskPercent">درصد ریسک در هر معامله</label>
+        <input id="riskPercent" name="riskPercent" type="number" min="0" step="0.1" placeholder="2" required />
+        <span class="error-message" data-error-for="riskPercent"></span>
+      </div>
+
+      <div class="field">
+        <label for="stopLoss">حد ضرر (فاصله تا استاپ)</label>
+        <input id="stopLoss" name="stopLoss" type="number" min="0" step="0.01" placeholder="50" required />
+        <span class="error-message" data-error-for="stopLoss"></span>
+      </div>
+
+      <button type="submit">محاسبه حجم امن معامله</button>
+    </form>
+
+    <div class="results">
+      <div class="card">
+        <h3>حجم مجاز معامله</h3>
+        <p id="positionSize">--</p>
+      </div>
+      <div class="card">
+        <h3>میزان پول در ریسک</h3>
+        <p id="riskAmount">--</p>
+      </div>
+      <div class="alert" id="warning">
+        ⚠️ ریسک شما بیش از ۵٪ است. قبل از معامله بازنگری کنید.
+      </div>
+    </div>
+
+    <section class="how-to">
+      <strong>روش اجرا روی موبایل:</strong>
+      این فایل تنها از HTML و JavaScript استفاده می‌کند. کافی است آن را روی گوشی یا تبلت ذخیره کنید و مستقیماً با باز کردن <code>index.html</code> در مرورگر (Chrome، Safari و غیره) اجرا کنید. هیچ سرور یا اتصال ویژه‌ای لازم نیست.
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const form = document.getElementById("risk-form");
+      const balanceInput = document.getElementById("balance");
+      const riskPercentInput = document.getElementById("riskPercent");
+      const stopLossInput = document.getElementById("stopLoss");
+      const positionSizeEl = document.getElementById("positionSize");
+      const riskAmountEl = document.getElementById("riskAmount");
+      const warningEl = document.getElementById("warning");
+
+      const formatNumber = (value, decimals = 2) => {
+        if (!Number.isFinite(value)) return "--";
+        return new Intl.NumberFormat("fa-IR", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        }).format(value);
+      };
+
+      const showError = (input, message) => {
+        const errorEl = document.querySelector(`[data-error-for="${input.id}"]`);
+        if (errorEl) errorEl.textContent = message || "";
+      };
+
+      const clearErrors = () => {
+        document.querySelectorAll(".error-message").forEach((el) => (el.textContent = ""));
+      };
+
+      const validateNumber = (input) => {
+        const value = parseFloat(input.value);
+        if (Number.isNaN(value) || value < 0) {
+          showError(input, "یک مقدار عددی معتبر وارد کنید");
+          return null;
+        }
+        return value;
+      };
+
+      const calculate = () => {
+        clearErrors();
+
+        const balance = validateNumber(balanceInput);
+        const riskPercent = validateNumber(riskPercentInput);
+        const stopLoss = validateNumber(stopLossInput);
+
+        if (balance === null || riskPercent === null || stopLoss === null) {
+          positionSizeEl.textContent = "--";
+          riskAmountEl.textContent = "--";
+          warningEl.classList.remove("active");
+          return;
+        }
+
+        if (stopLoss === 0) {
+          showError(stopLossInput, "حد ضرر نمی‌تواند صفر باشد");
+          positionSizeEl.textContent = "--";
+          riskAmountEl.textContent = "--";
+          warningEl.classList.remove("active");
+          return;
+        }
+
+        const riskAmount = balance * (riskPercent / 100);
+        const positionSize = riskAmount / stopLoss;
+
+        riskAmountEl.textContent = `${formatNumber(riskAmount)} واحد پولی`;
+        positionSizeEl.textContent = `${formatNumber(positionSize)} واحد حجم`;
+
+        if (riskPercent > 5) {
+          warningEl.classList.add("active");
+        } else {
+          warningEl.classList.remove("active");
+        }
+      };
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        calculate();
+      });
+
+      form.addEventListener("input", () => {
+        clearErrors();
+      });
+    })();
+  </script>
+</body>
+</html>

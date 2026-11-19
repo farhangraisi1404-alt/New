@@ -174,13 +174,14 @@ function analyze(symbol, data) {
   const volSpike = volRatio != null && volRatio >= 1.8;
   const obv = hasVol ? B.slice(-20).reduce((s, b, i, arr) => s + (i && b.c > arr[i - 1].c ? b.v : i && b.c < arr[i - 1].c ? -b.v : 0), 0) : null;
   const flowIn = obv != null && obv > 0 && C[n] > C[n - 20];
+  const flowOut = obv != null && obv < 0 && C[n] < C[n - 20];
   const bullScore = [trendUp, breakoutUp, volSpike && last.c > last.o, flowIn, r[n] > 50 && r[n] < 70].filter(Boolean).length;
   const bearScore = [trendDn, breakoutDn, volSpike && last.c < last.o, obv != null && obv < 0 && C[n] < C[n - 20], r[n] < 50 && r[n] > 30].filter(Boolean).length;
   const bias = bullScore >= 3 && bullScore > bearScore ? 'long' : bearScore >= 3 && bearScore > bullScore ? 'short' : 'neutral';
   return {
     symbol, cls: assetClass(symbol), tf: data.tf, daily: data.daily, price: C[n], chg, rsi: r[n], atr: a[n], atrPct: a[n] / C[n] * 100,
     ema20: e20[n], ema50: e50[n], ema200: e200[n], prevHigh, prevLow, volRatio, hasVol,
-    checks: { trendUp, trendDn, breakoutUp, breakoutDn, volSpike, flowIn },
+    checks: { trendUp, trendDn, breakoutUp, breakoutDn, volSpike, flowIn, flowOut }, lastUp: last.c >= last.o,
     bullScore, bearScore, bias, setup: bias !== 'neutral',
     recent: B.slice(-30).map(b => [+b.o.toPrecision(6), +b.h.toPrecision(6), +b.l.toPrecision(6), +b.c.toPrecision(6)]),
   };
@@ -247,7 +248,7 @@ function riskCheck(plan, snap) {
   add(atrMul >= 0.5 && atrMul <= 5, `فاصله حد ضرر ${faNum(atrMul, 1)} برابر ATR (بازه مجاز ۰٫۵ تا ۵)`, false);
   const dd = S.peakEquity > 0 ? Math.max(0, (S.peakEquity - S.capital) / S.peakEquity * 100) : 0;
   add(dd < S.maxDD, `افت فعلی سرمایه ${faNum(dd, 1)}٪ (حداکثر مجاز ${faNum(S.maxDD)}٪)`);
-  add((plan.confidence ?? 0) >= S.minConfidence, `اطمینان Claude ${faNum(plan.confidence ?? 0, 0)}٪ (حداقل ${faNum(S.minConfidence)}٪)`);
+  add((plan.confidence ?? 0) >= S.minConfidence, `اطمینان تحلیل ${faNum(plan.confidence ?? 0, 0)}٪ (حداقل ${faNum(S.minConfidence)}٪)`);
   const dist = snap.atr ? Math.abs(entry - snap.price) / snap.atr : 0;
   add(dist <= 3, `نقطه ورود ${faNum(dist, 1)} ATR با قیمت فعلی فاصله دارد`, false);
   out.size = { riskAmt, units, notional, lev, rr };
@@ -338,7 +339,11 @@ ${bear}
 {"decision":"long"|"short"|"no_trade","entry":عدد,"stop":عدد,"target":عدد,"confidence":0-100,"horizon":"متن کوتاه","summary":"جمع‌بندی ۲-۳ جمله‌ای فارسی","for":["دلیل موافق",...],"against":["دلیل مخالف",...],"invalidation":"شرط ابطال به فارسی"}`,
   }),
 };
-function parseJSON(t) { const m = t.match(/\{[\s\S]*\}/); if (!m) throw new Error('خروجی JSON از Claude قابل خواندن نبود'); const j = JSON.parse(m[0]); ['entry', 'stop', 'target', 'confidence'].forEach(k => j[k] = j[k] == null ? null : Number(j[k])); return j; }
+function parseJSON(t) {
+  t = t.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/(\d)٫(\d)/g, '$1.$2');
+  const f = t.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/); const m = f ? f[1] : (t.match(/\{[\s\S]*\}/) || [])[0];
+  if (!m) throw new Error('بلوک JSON پیدا نشد'); let j; try { j = JSON.parse(m); } catch { throw new Error('JSON قابل خواندن نبود'); }
+  if (!['long', 'short', 'no_trade'].includes(j.decision)) throw new Error('فیلد decision نامعتبر است'); ['entry', 'stop', 'target', 'confidence'].forEach(k => j[k] = j[k] == null ? null : Number(j[k])); return j; }
 
 /* ───────────────────────── background waves ───────────────────────── */
 function drawWaves() {
@@ -378,7 +383,7 @@ const AG = [
 ];
 
 function renderStatus() {
-  const p = $('#statusPill'); const on = !!S.apiKey; p.className = 'pill ' + (on ? 'ok' : 'off'); p.textContent = on ? '6 AGENTS · ON' : 'API KEY ✕';
+  const p = $('#statusPill'); const on = !!S.apiKey; p.className = 'pill ok'; p.textContent = on ? '6 AGENTS · API' : '6 AGENTS · LOCAL';
 }
 
 async function renderHome() {
@@ -388,7 +393,7 @@ async function renderHome() {
   <h2>تو <span class="chipbox"><bdi class="latin">۶ تا Agent</bdi></span> داری.</h2>
   <p class="lead">اسکن، تحلیل، مدیریت ریسک و بک‌تست رو اونا انجام می‌دن.<br><b>تصمیم آخر همیشه با خودته.</b></p>
   <div class="grid2" style="margin-top:28px">
-    <div class="card" style="text-align:center;padding-top:26px"><span class="label latin">CLAUDE</span>${burst(84)}<div class="latin small muted" dir="ltr" style="margin-top:10px;letter-spacing:.14em">6 AGENTS → ${S.apiKey ? 'ON' : 'OFF'}</div></div>
+    <div class="card" style="text-align:center;padding-top:26px"><span class="label latin">CLAUDE</span>${burst(84)}<div class="latin small muted" dir="ltr" style="margin-top:10px;letter-spacing:.14em">6 AGENTS → ${S.apiKey ? 'API' : 'LOCAL + PRO'}</div></div>
     <div class="card" style="padding-top:22px"><span class="label">میز معاملات</span><div class="spread small"><b id="hSym">BTCUSDT</b><span class="up" id="hChg">● اسکن زنده</span></div><div id="hChart" style="margin-top:6px"><div class="empty">در حال دریافت…</div></div></div>
   </div>
   <h3 style="margin-top:22px">۶ ایجنت هوش مصنوعی. <span class="o">یه اتاق معاملات کامل.</span></h3>
@@ -440,7 +445,7 @@ function renderAgents() {
     <div style="display:flex;gap:8px"><select id="agSym">${watch().map(s => `<option value="${s}">${esc(displayName(s))}</option>`).join('')}</select></div>
     <div class="seg" id="agTf" style="margin-top:10px">${['1h', '4h', '1d'].map(t => `<button data-tf="${t}" class="${t === S.timeframe ? 'on' : ''}">${t}</button>`).join('')}</div>
     <button class="btn o" id="runDesk">${ic('play')} اجرای کامل میز معاملات</button>
-    <p class="small muted" style="margin-top:8px">هر اجرا حدود ۴ درخواست به Claude می‌فرستد (${esc(S.model)}). اسکنر، بک‌تستر و مدیر ریسک روی گوشی خودت اجرا می‌شوند.</p>
+    <p class="small muted" style="margin-top:8px">${S.apiKey ? `حالت API: هر اجرا حدود ۴ درخواست به Claude (${esc(S.model)}).` : 'حالت آفلاین: همه ایجنت‌ها روی گوشی اجرا می‌شوند. آخرش می‌تونی با دکمه «کپی برای Claude» تحلیل عمیق (با اخبار) رو از اپ Claude خودت بگیری.'}</p>
   </div>
   <div id="deskOut"></div>`;
   let tf = S.timeframe;
@@ -453,11 +458,133 @@ function stepCard(id, n, title, icon) {
 }
 const setStep = (id, state, html) => { const d = $('#dot-' + id); if (d) { d.className = 'dot ' + state; if (state === 'done') d.textContent = '✓'; if (state === 'err') d.textContent = '!'; } if (html != null) $('#body-' + id).innerHTML = html; };
 
+/* ───────── offline analysts (rule-based, run on the phone) ───────── */
+const pt = n => { if (n == null || !isFinite(n)) return '—'; const a = Math.abs(n); return Number(n).toLocaleString('en-US', { maximumFractionDigits: a >= 1000 ? 2 : a >= 10 ? 3 : a >= 1 ? 4 : 6 }); };
+function evidence(s, bt) {
+  const bull = [], bear = [], btGood = bt && bt.trades >= 5 && bt.ret > 0 && bt.pf > 1.2, btBad = bt && bt.trades >= 5 && (bt.ret < 0 || bt.pf < 0.9);
+  const ext = s.atr ? (s.price - s.ema20) / s.atr : 0;
+  if (s.checks.trendUp) bull.push([2, 'روند صعودی: EMA20 بالای EMA50 و قیمت بالای EMA20']);
+  if (s.checks.trendDn) bear.push([2, 'روند نزولی: EMA20 زیر EMA50 و قیمت زیر EMA20']);
+  if (s.ema200) (s.price > s.ema200 ? bull : bear).push([1, `قیمت ${s.price > s.ema200 ? 'بالای' : 'زیر'} میانگین ۲۰۰ (روند بلندمدت ${s.price > s.ema200 ? 'صعودی' : 'نزولی'})`]);
+  if (s.checks.breakoutUp) bull.push([1, `شکست سقف ۲۰ کندل اخیر (${pt(s.prevHigh)})`]);
+  if (s.checks.breakoutDn) bear.push([1, `شکست کف ۲۰ کندل اخیر (${pt(s.prevLow)})`]);
+  if (s.checks.volSpike) (s.lastUp ? bull : bear).push([1, `جهش حجم ${faNum(s.volRatio, 1)} برابر میانگین روی کندل ${s.lastUp ? 'سبز' : 'قرمز'}`]);
+  if (s.checks.flowIn) bull.push([1, 'ورود پول: OBV بیست کندل اخیر مثبت']);
+  if (s.checks.flowOut) bear.push([1, 'خروج پول: OBV بیست کندل اخیر منفی']);
+  if (s.rsi >= 50 && s.rsi < 68) bull.push([1, `مومنتوم مثبت (RSI ${faNum(s.rsi, 0)})`]);
+  if (s.rsi > 32 && s.rsi < 50) bear.push([1, `مومنتوم ضعیف (RSI ${faNum(s.rsi, 0)})`]);
+  if (s.rsi >= 72) bear.push([1, `اشباع خرید (RSI ${faNum(s.rsi, 0)}) — احتمال اصلاح`]);
+  if (s.rsi <= 28) bull.push([1, `اشباع فروش (RSI ${faNum(s.rsi, 0)}) — احتمال برگشت`]);
+  if (ext > 2.5) bear.push([1, `قیمت ${faNum(ext, 1)} ATR از EMA20 فاصله گرفته (کشیدگی زیاد)`]);
+  if (ext < -2.5) bull.push([1, `قیمت ${faNum(-ext, 1)} ATR زیر EMA20 (کشیدگی نزولی، احتمال برگشت)`]);
+  if (btGood) bull.push([1, `بک‌تست مثبت: بازده ${faNum(bt.ret, 1)}٪، PF ${faNum(bt.pf, 2)}`]);
+  if (btBad) bear.push([1, `بک‌تست ضعیف: بازده ${faNum(bt.ret, 1)}٪، افت ${faNum(bt.maxDD, 1)}٪`]);
+  if (s.atrPct > 5) bear.push([0, `نوسان بالا (ATR ${faNum(s.atrPct, 1)}٪ قیمت) — حجم کمتر بگیر`]);
+  const sum = a => a.reduce((x, y) => x + y[0], 0);
+  return { bull, bear, bs: sum(bull), rs: sum(bear) };
+}
+const strength = (a, b) => Math.max(1, Math.min(10, Math.round(2 + a * 1.4 - b * 0.4)));
+function localFund(s) {
+  const list = {
+    crypto: ['اخبار مهم پروژه، هک یا مشکل صرافی‌ها', 'جریان ورود/خروج ETF بیت‌کوین و اتریوم', 'جلسه فدرال رزرو و داده تورم آمریکا (CPI)', 'دامیننس بیت‌کوین و حال کلی بازار'],
+    gold: ['بازده اوراق ۱۰ ساله و نرخ بهره واقعی آمریکا', 'شاخص دلار (DXY)', 'تنش‌های ژئوپلیتیک', 'خرید طلای بانک‌های مرکزی'],
+    forex: ['تصمیم نرخ بهره بانک مرکزی هر دو ارز', 'تقویم اقتصادی این هفته (NFP، CPI، GDP)', 'سخنرانی رؤسای بانک‌های مرکزی', 'اختلاف بازده اوراق دو کشور'],
+  }[s.cls];
+  return `## حالت آفلاین
+اخبار لحظه‌ای خوانده نشد. برای تحلیل اخبار از دکمه «کپی برای Claude» پایین صفحه استفاده کن.
+## خلاصه وضعیت
+- روند بلندمدت: ${s.ema200 ? (s.price > s.ema200 ? 'صعودی (بالای EMA200)' : 'نزولی (زیر EMA200)') : 'داده کافی نیست'}
+- نوسان روزانه/کندلی: ${faNum(s.atrPct, 2)}٪ ${s.atrPct > 4 ? '(بالا)' : s.atrPct < 1 ? '(کم)' : '(معمولی)'}
+- محدوده اخیر: ${pt(s.prevLow)} تا ${pt(s.prevHigh)}
+## قبل از ورود، خودت چک کن
+${list.map(x => '- ' + x).join('\n')}`;
+}
+function localBull(s, ev) {
+  const t1 = Math.max(s.prevHigh, s.price + 2 * s.atr), t2 = s.price + 3.5 * s.atr;
+  return `## دلایل رشد\n${ev.bull.length ? ev.bull.map(x => '- ' + x[1]).join('\n') : '- شاهد قابل‌توجهی برای رشد پیدا نشد'}
+## پتانسیل سود\n- هدف اول: ${pt(t1)} (${pct((t1 / s.price - 1) * 100)})\n- هدف دوم: ${pt(t2)} (${pct((t2 / s.price - 1) * 100)})
+## قدرت استدلال من\n${faNum(strength(ev.bs, ev.rs), 0)} از ۱۰`;
+}
+function localBear(s, ev) {
+  const inv = Math.min(s.ema50 || s.prevLow, s.prevLow);
+  return `## ریسک‌های نزولی\n${ev.bear.length ? ev.bear.map(x => '- ' + x[1]).join('\n') : '- ریسک نزولی خاصی در داده‌ها دیده نشد'}
+## نقطه ابطال تحلیل صعودی\n- بسته شدن زیر ${pt(inv)}
+## قدرت استدلال من\n${faNum(strength(ev.rs, ev.bs), 0)} از ۱۰`;
+}
+function localPlan(s, bt, ev) {
+  const net = ev.bs - ev.rs, rr = Math.max(S.minRR, 2) + 0.05, k = 1.5;
+  let decision = net >= 2 ? 'long' : net <= -2 && S.allowShort ? 'short' : 'no_trade';
+  const dir = decision === 'long' ? 1 : -1;
+  let conf = Math.min(85, 45 + Math.abs(net) * 7);
+  if (bt && bt.trades >= 5) conf += (bt.ret > 0 && bt.pf > 1.2) ? 5 : bt.ret < 0 ? -10 : 0;
+  const plan = { decision, confidence: Math.round(conf), horizon: S.style === 'swing' ? 'چند روز' : 'درون‌روزی', mode: 'local',
+    for: (decision === 'short' ? ev.bear : ev.bull).map(x => x[1]).slice(0, 4), against: (decision === 'short' ? ev.bull : ev.bear).map(x => x[1]).slice(0, 4) };
+  if (decision === 'no_trade') {
+    plan.summary = `امتیاز خوش‌بین ${ev.bs} در برابر بدبین ${ev.rs} — اختلاف کافی برای ورود نیست${net <= -2 && !S.allowShort ? ' (سیگنال فروش هست ولی شورت در تنظیمات غیرفعال است)' : ''}. صبر کن تا ستاپ واضح‌تر شود.`;
+    plan.for = ev.bull.map(x => x[1]).slice(0, 3); plan.against = ev.bear.map(x => x[1]).slice(0, 3);
+    return plan;
+  }
+  plan.entry = s.price; plan.stop = s.price - dir * k * s.atr; plan.target = s.price + dir * k * s.atr * rr;
+  plan.summary = `امتیاز ${decision === 'long' ? 'خوش‌بین' : 'بدبین'} ${Math.max(ev.bs, ev.rs)} در برابر ${Math.min(ev.bs, ev.rs)}. حد ضرر ${k} برابر ATR و هدف با R:R ${faNum(rr, 2)}. این جمع‌بندی فقط تکنیکال است؛ برای بررسی اخبار از «کپی برای Claude» استفاده کن.`;
+  plan.invalidation = decision === 'long' ? `بسته شدن زیر ${pt(plan.stop)}` : `بسته شدن بالای ${pt(plan.stop)}`;
+  return plan;
+}
+
+/* ───────── copy-to-Claude (uses the user's own Claude.ai / Pro chat) ───────── */
+function claudeChatPrompt(run) {
+  const s = run.snap;
+  return `تو یک میز معاملات حرفه‌ای با چهار نقش هستی و به فارسی روان جواب می‌دی. سود رو هیچ‌وقت تضمین نکن.
+اول با جستجوی وب مهم‌ترین اخبار ۷ روز اخیر مربوط به ${displayName(s.symbol)} (${CLASS_FA[s.cls]}) رو پیدا کن. تاریخ امروز: ${new Date().toISOString().slice(0, 10)}.
+
+${profileText()}
+داده تکنیکال (تایم‌فریم ${s.tf}): ${snapText(s)}
+${btText(run.bt)}
+${run.plan ? `نظر تحلیل آفلاین اپ: ${run.plan.decision} با اطمینان ${run.plan.confidence}٪.` : ''}
+
+این چهار بخش رو کوتاه بنویس:
+## ۱. تحلیلگر بنیادی — مهم‌ترین اخبار و داده‌ها (با تاریخ و منبع)
+## ۲. تحلیلگر خوش‌بین — دلایل رشد، هدف‌های قیمتی، قدرت استدلال از ۱۰
+## ۳. تحلیلگر بدبین — ریسک‌ها، نقطه ابطال، قدرت استدلال از ۱۰
+## ۴. جمع‌بندی — تصمیم نهایی با در نظر گرفتن پروفایل ریسک من. اگه شواهد کافی نیست، no_trade بده.
+
+قیمت فعلی ${s.price} و ATR برابر ${s.atr} است؛ سطوح رو واقع‌بینانه و نزدیک قیمت فعلی بده.
+در آخرِ جواب، دقیقاً یک بلوک کد json با این فرمت بنویس (اعداد با ارقام انگلیسی):
+\`\`\`json
+{"decision":"long|short|no_trade","entry":0,"stop":0,"target":0,"confidence":0,"horizon":"","summary":"","for":[""],"against":[""],"invalidation":""}
+\`\`\``;
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch {}
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch {} ta.remove(); return ok;
+}
+function copyCard(run) {
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div class="card dash" id="copyC"><span class="num" style="right:12px">PRO</span>
+    <h3 style="margin-top:6px">${ic('spark', 'ic-o')} تحلیل عمیق با Claude <span class="small muted">(با اشتراک خودت)</span></h3>
+    <p class="small muted" style="line-height:1.9">۱. «کپی متن» رو بزن ← ۲. توی اپ Claude بچسبون و بفرست ← ۳. کل جواب Claude رو کپی کن و اینجا بچسبون.</p>
+    <div class="grid2"><button class="btn o sm" id="cpBtn" style="width:100%">کپی متن برای Claude</button><a class="btn ghost sm" style="width:100%;text-decoration:none" href="https://claude.ai/new" target="_blank" rel="noopener">باز کردن Claude</a></div>
+    <label class="f">جواب Claude رو اینجا بچسبون</label><textarea id="cpIn" rows="5" placeholder="کل جواب Claude (همراه با بلوک json آخرش)"></textarea>
+    <button class="btn" id="cpGo">${ic('shield')} بررسی با مدیر ریسک</button><div id="cpOut"></div></div>`;
+  $('#deskOut').appendChild(wrap);
+  $('#cpBtn').onclick = async () => toast(await copyText(claudeChatPrompt(run)) ? '✓ کپی شد — حالا توی Claude بچسبون' : 'کپی نشد؛ دوباره امتحان کن', 3500);
+  $('#cpGo').onclick = () => {
+    const t = $('#cpIn').value.trim(); if (!t) return toast('اول جواب Claude رو بچسبون');
+    try {
+      const plan = parseJSON(t); plan.mode = 'claude'; const rk = riskCheck(plan, run.snap);
+      $('#cpOut').innerHTML = planHTML(plan) + `<h3 style="margin-top:14px">${ic('shield', 'ic-o')} مدیر ریسک</h3>` + riskHTML(rk);
+      updateRun(run.id, { plan, risk: rk, mode: 'claude', claudeText: t.slice(0, 8000), localPlan: run.plan });
+      toast('نتیجه Claude در ژورنال ذخیره شد');
+    } catch (e) { $('#cpOut').innerHTML = `<div class="verdict bad">${ic('warn')} ${esc(e.message)} — مطمئن شو بلوک json آخر جواب هم کپی شده.</div>`; }
+  };
+}
+
 async function runDesk(sym, tf) {
   const out = $('#deskOut'); const btn = $('#runDesk'); btn.disabled = true;
-  out.innerHTML = stepCard('scan', 1, 'اسکنر بازار', 'search') + stepCard('bt', 2, 'بک‌تستر', 'clock') + stepCard('fund', 3, 'تحلیلگر بنیادی', 'file') +
-    `<div id="debateWrap"></div>` + stepCard('cio', 5, 'Claude · مغز مشترک', 'spark') + stepCard('risk', 6, 'مدیر ریسک', 'shield');
-  const run = { id: Date.now(), sym, tf, at: new Date().toISOString() };
+  const useAPI = !!S.apiKey;
+  out.innerHTML = stepCard('scan', 1, 'اسکنر بازار', 'search') + stepCard('bt', 2, 'بک‌تستر', 'clock') + stepCard('fund', 3, 'تحلیلگر بنیادی' + (useAPI ? '' : ' · آفلاین'), 'file') +
+    `<div id="debateWrap"></div>` + stepCard('cio', 5, useAPI ? 'Claude · مغز مشترک' : 'جمع‌بندی · آفلاین', 'spark') + stepCard('risk', 6, 'مدیر ریسک', 'shield');
+  const run = { id: Date.now(), sym, tf, at: new Date().toISOString(), mode: useAPI ? 'api' : 'local' };
   try {
     // 1 scanner
     setStep('scan', 'run', '<div class="small muted" style="margin-top:8px">دریافت داده و محاسبه اندیکاتورها…</div>');
@@ -469,43 +596,47 @@ async function runDesk(sym, tf) {
       ${ck(s.checks.breakoutUp || s.checks.breakoutDn, s.checks.breakoutDn ? 'شکست حمایت مهم' : 'شکست مقاومت مهم')}${ck(s.checks.trendUp || s.checks.trendDn, s.checks.trendDn ? 'روند نزولی (EMA20 < EMA50)' : 'روند صعودی (EMA20 > EMA50)')}
       <div class="kv"><span>RSI / ATR</span><span><bdi class="n">${faNum(s.rsi, 0)}</bdi> / ${px(s.atr)} (${faNum(s.atrPct, 2)}٪)</span></div>
       <div class="verdict ${s.setup ? 'ok' : 'wait'}">${ic(s.setup ? 'ok' : 'clock')} ${s.setup ? `ستاپ ${s.bias === 'long' ? 'خرید' : 'فروش'} پیدا شد` : 'ستاپ قوی نیست — ادامه برای نظر ایجنت‌ها'}</div>
-      ${data.daily && !isFx(sym) ? '' : data.daily ? '<p class="small muted" style="margin-top:6px">فارکس: فقط داده روزانه (نرخ مرجع ECB) در دسترس است.</p>' : ''}`);
+      ${data.daily && isFx(sym) ? '<p class="small muted" style="margin-top:6px">فارکس: فقط داده روزانه (نرخ مرجع ECB) در دسترس است.</p>' : ''}`);
 
     // 2 backtest
     setStep('bt', 'run');
     const bt = backtest(data.bars, defaultParams()); run.bt = bt;
     setStep('bt', 'done', btHTML(bt));
 
-    if (!S.apiKey) throw new Error('برای ایجنت‌های Claude کلید API را در تنظیمات وارد کن. (اسکن و بک‌تست بدون کلید هم کار می‌کنند.)');
+    const debate = () => { $('#debateWrap').innerHTML = `<h3 style="margin:18px 0 6px">سر هر معامله <span class="o">با هم بحث می‌کنن.</span></h3>
+      <div class="debate"><div class="card topgreen" id="bullC"><h3 class="up">${ic('up')} خوش‌بین</h3><div class="small muted">در حال فکر…</div></div><div class="vs">VS</div><div class="card topred" id="bearC"><h3 class="down">${ic('down')} بدبین</h3><div class="small muted">در حال فکر…</div></div></div>`; };
+    const showDebate = () => { $('#bullC').innerHTML = `<h3 class="up">${ic('up')} خوش‌بین</h3><div class="md">${md(run.bull)}</div>`; $('#bearC').innerHTML = `<h3 class="down">${ic('down')} بدبین</h3><div class="md">${md(run.bear)}</div>`; };
 
-    // 3 fundamental
-    setStep('fund', 'run', `<div class="small muted" style="margin-top:8px">${S.webSearch ? 'در حال خواندن اخبار و جستجوی وب…' : 'در حال تحلیل…'}</div>`);
-    const fa = AGENTS.fundamental(s); const fund = await claude(fa); run.fund = fund;
-    setStep('fund', 'done', `<div class="md">${md(fund)}</div>`);
-
-    // 4 bull vs bear (parallel)
-    $('#debateWrap').innerHTML = `<h3 style="margin:18px 0 6px">سر هر معامله <span class="o">با هم بحث می‌کنن.</span></h3>
-      <div class="debate"><div class="card topgreen" id="bullC"><h3 class="up">${ic('up')} خوش‌بین</h3><div class="small muted">در حال فکر…</div></div><div class="vs">VS</div><div class="card topred" id="bearC"><h3 class="down">${ic('down')} بدبین</h3><div class="small muted">در حال فکر…</div></div></div>`;
-    const [bull, bear] = await Promise.all([claude(AGENTS.bull(s, fund, bt)), claude(AGENTS.bear(s, fund, bt))]);
-    run.bull = bull; run.bear = bear;
-    $('#bullC').innerHTML = `<h3 class="up">${ic('up')} خوش‌بین</h3><div class="md">${md(bull)}</div>`;
-    $('#bearC').innerHTML = `<h3 class="down">${ic('down')} بدبین</h3><div class="md">${md(bear)}</div>`;
-
-    // 5 synthesis
-    setStep('cio', 'run', '<div class="small muted" style="margin-top:8px">Claude حرف هر دو طرف رو می‌شنوه و جمع‌بندی می‌کنه…</div>');
-    const plan = parseJSON(await claude(AGENTS.cio(s, fund, bull, bear, bt))); run.plan = plan;
-    setStep('cio', 'done', planHTML(plan));
+    if (useAPI) {
+      setStep('fund', 'run', `<div class="small muted" style="margin-top:8px">${S.webSearch ? 'در حال خواندن اخبار و جستجوی وب…' : 'در حال تحلیل…'}</div>`);
+      run.fund = await claude(AGENTS.fundamental(s));
+      setStep('fund', 'done', `<div class="md">${md(run.fund)}</div>`);
+      debate();
+      [run.bull, run.bear] = await Promise.all([claude(AGENTS.bull(s, run.fund, bt)), claude(AGENTS.bear(s, run.fund, bt))]);
+      showDebate();
+      setStep('cio', 'run', '<div class="small muted" style="margin-top:8px">Claude حرف هر دو طرف رو می‌شنوه و جمع‌بندی می‌کنه…</div>');
+      run.plan = parseJSON(await claude(AGENTS.cio(s, run.fund, run.bull, run.bear, bt)));
+    } else {
+      const ev = evidence(s, bt);
+      run.fund = localFund(s); setStep('fund', 'done', `<div class="md">${md(run.fund)}</div>`);
+      debate(); run.bull = localBull(s, ev); run.bear = localBear(s, ev); showDebate();
+      run.plan = localPlan(s, bt, ev);
+    }
+    setStep('cio', 'done', planHTML(run.plan));
 
     // 6 risk
-    const rk = riskCheck(plan, s); run.risk = rk;
-    setStep('risk', 'done', riskHTML(rk));
+    run.risk = riskCheck(run.plan, s);
+    setStep('risk', 'done', riskHTML(run.risk));
     saveRun(run); toast('نتیجه در ژورنال ذخیره شد');
   } catch (e) {
     const cur = ['scan', 'bt', 'fund', 'cio', 'risk'].find(id => $('#dot-' + id)?.classList.contains('run')) || ['fund', 'cio', 'risk'].find(id => !$('#dot-' + id)?.classList.contains('done'));
     if (cur) setStep(cur, 'err', `<div class="verdict bad">${ic('warn')} ${esc(e.message)}</div>`);
     else toast(e.message, 5000);
     if (run.snap) saveRun(run);
-  } finally { btn.disabled = false; }
+  } finally {
+    btn.disabled = false;
+    if (run.snap && run.bt) copyCard(run);
+  }
 }
 
 function btHTML(b) {
@@ -579,16 +710,18 @@ function renderBacktest() {
 
 /* journal */
 const runs = () => LS.get('ftd.journal', []);
+function updateRun(id, patch) { const j = runs(); const i = j.findIndex(r => r.id === id); if (i < 0) return; Object.assign(j[i], patch); LS.set('ftd.journal', j); }
 function saveRun(r) { const j = runs(); const slim = { ...r, snap: r.snap && { ...r.snap, recent: undefined }, bt: r.bt && { ...r.bt, curve: undefined } }; j.unshift(slim); LS.set('ftd.journal', j.slice(0, 60)); }
 function renderJournal() {
   const el = $('#p-journal'); const j = runs();
   el.innerHTML = `<span class="tag">ژورنال معاملات</span><h2>هر تحلیل، <span class="o">ثبت می‌شه.</span></h2>
   ${j.length ? j.map((r, i) => {
     const p = r.plan; const ok = r.risk?.approved;
-    return `<details class="card"><summary><div class="spread"><div><b>${esc(displayName(r.sym))}</b> <span class="small muted">${esc(r.tf)} · ${new Date(r.at).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' })}</span></div>
+    return `<details class="card"><summary><div class="spread"><div><b>${esc(displayName(r.sym))}</b> <span class="small muted">${esc(r.tf)} · ${{ api: 'API', local: 'آفلاین', claude: 'Claude' }[r.mode] || ''} · ${new Date(r.at).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' })}</span></div>
       <span class="small ${p?.decision === 'long' ? 'up' : p?.decision === 'short' ? 'down' : 'muted'}">${p ? ({ long: '▲ خرید', short: '▼ فروش', no_trade: 'بدون معامله' }[p.decision]) : 'ناقص'} ${r.risk ? (ok ? '· ✓' : '· ✕') : ''}</span></div></summary>
       ${p ? planHTML(p) : ''}${r.risk ? riskHTML(r.risk) : ''}
       ${r.fund ? `<details style="margin-top:10px"><summary class="small o">گزارش بنیادی</summary><div class="md">${md(r.fund)}</div></details>` : ''}
+      ${r.claudeText ? `<details><summary class="small o">جواب Claude</summary><div class="md">${md(r.claudeText)}</div></details>` : ''}
       ${r.bull ? `<details><summary class="small up">خوش‌بین</summary><div class="md">${md(r.bull)}</div></details>` : ''}
       ${r.bear ? `<details><summary class="small down">بدبین</summary><div class="md">${md(r.bear)}</div></details>` : ''}
       <div class="seg" style="margin-top:12px">${['برد', 'باخت', 'وارد نشدم'].map(o => `<button data-res="${i}|${o}" class="${r.result === o ? 'on' : ''}">${o}</button>`).join('')}<button data-del="${i}">${ic('trash').replace('<svg', '<svg width="14" height="14"')}</button></div>
@@ -607,7 +740,8 @@ function renderSettings() {
   el.innerHTML = `
   <span class="tag">تنظیمات شخصی</span><h2>قوانین <span class="o">خودت</span>.</h2>
   <div class="card"><h3>${ic('spark', 'ic-o')} اتصال به Claude</h3>
-    <label class="f">کلید API <small>فقط روی همین گوشی ذخیره می‌شود</small></label>
+    <p class="small muted" style="line-height:1.9">کلید API اختیاری است. بدون کلید، ایجنت‌ها آفلاین کار می‌کنند و با دکمه «کپی برای Claude» از اشتراک Pro خودت استفاده می‌کنی. کلید را از platform.claude.com بگیر (جدا از اشتراک Pro).</p>
+    <label class="f">کلید API <small>اختیاری · فقط روی همین گوشی ذخیره می‌شود</small></label>
     <input class="ltr" type="password" data-k="apiKey" value="${esc(S.apiKey)}" placeholder="sk-ant-..." autocomplete="off">
     <label class="f">مدل</label><select data-k="model">
       <option value="claude-opus-5-5">Claude Opus 5.5 — دقیق‌ترین (پیش‌فرض)</option>
@@ -655,5 +789,4 @@ function go(p) {
 document.querySelectorAll('[data-i]').forEach(s => s.outerHTML = ic(s.dataset.i));
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => go(b.dataset.p));
 drawWaves(); renderStatus(); renderHome();
-if (!S.apiKey) setTimeout(() => toast('برای فعال شدن ایجنت‌های Claude، کلید API رو در تنظیمات وارد کن', 4500), 1200);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

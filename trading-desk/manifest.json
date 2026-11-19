@@ -1,0 +1,17 @@
+{
+  "name": "Farhang Trading Desk",
+  "short_name": "Trading Desk",
+  "description": "میز معاملات هوش مصنوعی با ۶ ایجنت — کریپتو، طلا و فارکس",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1efe9",
+  "theme_color": "#f1efe9",
+  "orientation": "portrait",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

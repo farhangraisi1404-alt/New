@@ -259,27 +259,42 @@ function riskCheck(plan, snap) {
 /* ───────────────────────── Claude API ───────────────────────── */
 const cleanKey = k => String(k || '').replace(/[^\x21-\x7e]/g, '');
 const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5']);
+function keyProblem(raw) {
+  const k = cleanKey(raw);
+  if (!k) return 'کلید API در تنظیمات وارد نشده است.';
+  if (/\.\.\.|…/.test(String(raw)) || /\.\.\./.test(k)) return 'این نسخهٔ کوتاه‌شدهٔ کلید است (با «...» وسطش) که در لیست سایت نمایش داده می‌شود. کلید کامل فقط یک بار، لحظهٔ ساختن، نشان داده می‌شود: یک کلید جدید بساز و همان لحظه دکمهٔ Copy را بزن.';
+  if (!k.startsWith('sk-ant-')) return 'کلید باید با sk-ant- شروع شود. احتمالاً کلید از سایت Anthropic نیست یا ناقص کپی شده.';
+  if (k.length < 60) return `کلید خیلی کوتاه است (${k.length} کاراکتر؛ کلید کامل معمولاً بیش از ۱۰۰ کاراکتر است). احتمالاً ناقص کپی شده.`;
+  return null;
+}
 async function claude({ system, prompt, webSearch = false, maxTokens = 8000 }) {
-  if (!S.apiKey) throw new Error('کلید API در تنظیمات وارد نشده است.');
-  const headers = {
-    'content-type': 'application/json', 'x-api-key': cleanKey(S.apiKey),
-    'anthropic-version': '2026-10-21', 'anthropic-dangerous-direct-browser-access': 'true',
-  };
+  const bad = keyProblem(S.apiKey); if (bad) throw new Error(bad);
+  const key = cleanKey(S.apiKey);
+  const base = { 'content-type': 'application/json', 'anthropic-version': '2026-10-21', 'anthropic-dangerous-direct-browser-access': 'true' };
   const body = { model: S.model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }], output_config: { effort: S.effort } };
-  if (FALLBACK_MODELS.has(S.model)) { headers['anthropic-beta'] = 'server-side-fallback-2026-07-01'; body.fallbacks = 'default'; }
+  if (FALLBACK_MODELS.has(S.model)) { base['anthropic-beta'] = 'server-side-fallback-2026-07-01'; body.fallbacks = 'default'; }
   if (webSearch) body.tools = [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }];
-  for (let turn = 0; turn < 4; turn++) {
+  // Documented auth is "Authorization: Bearer <key>"; legacy x-api-key is the fallback.
+  const modes = LS.get('ftd.authMode', 'bearer') === 'x-api-key' ? ['x-api-key', 'bearer'] : ['bearer', 'x-api-key'];
+  let mi = 0;
+  for (let turn = 0; turn < 5; turn++) {
+    const headers = { ...base, ...(modes[mi] === 'bearer' ? { authorization: 'Bearer ' + key } : { 'x-api-key': key }) };
     let res;
     try { res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(body) }); }
     catch { throw new Error('اتصال به Claude برقرار نشد (شبکه/VPN را بررسی کن).'); }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const m = data?.error?.message || `HTTP ${res.status}`;
-      if (res.status === 401) { const k = cleanKey(S.apiKey); throw new Error(!k.startsWith('sk-ant-') ? 'کلید باید با sk-ant- شروع شود. احتمالاً کلید از سایت Anthropic نیست یا ناقص کپی شده.' : `کلید API رد شد (${k.length} کاراکتر، آخرش …${k.slice(-4)}). کلید را دوباره کامل کپی کن یا در platform.claude.com یک کلید جدید بساز. پیام سرور: ${m}`); }
-      if (res.status === 429) throw new Error('محدودیت نرخ درخواست — کمی صبر کن و دوباره امتحان کن.');
+      if (res.status === 401 && mi === 0) { mi = 1; continue; }
+      if (res.status === 401) throw new Error(/CORS/i.test(m) ? 'سازمان تو اجازهٔ استفاده از API در مرورگر را نمی‌دهد: ' + m : `کلید API رد شد (${key.length} کاراکتر، آخرش …${key.slice(-4)}). یک کلید جدید بساز و کامل کپی کن. پیام سرور: ${m}`);
+      if (/credit balance|billing|purchase credits/i.test(m)) throw new Error('اعتبار حساب API صفر است. در platform.claude.com بخش Billing باید اعتبار بخری. پیام سرور: ' + m);
+      if (/workspace/i.test(m)) throw new Error('این کلید به یک workspace نیاز دارد. در platform.claude.com یک کلید با Scope «Default workspace» بساز. پیام سرور: ' + m);
+      if (res.status === 429) throw new Error('محدودیت نرخ درخواست (پلن رایگان محدودیت کمی دارد) — یک دقیقه صبر کن و دوباره امتحان کن، یا مدل را روی Haiku بگذار.');
       if (res.status === 403) throw new Error('دسترسی رد شد (احتمالاً محدودیت منطقه‌ای؛ VPN لازم است): ' + m);
+      if (res.status === 404 && /model/i.test(m)) throw new Error('این مدل برای حساب تو در دسترس نیست؛ در تنظیمات مدل دیگری انتخاب کن. پیام سرور: ' + m);
       throw new Error(m);
     }
+    LS.set('ftd.authMode', modes[mi]);
     if (data.stop_reason === 'pause_turn') { body.messages = [...body.messages, { role: 'assistant', content: data.content }]; continue; }
     if (data.stop_reason === 'refusal') throw new Error('Claude به این درخواست پاسخ نداد (refusal).');
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
@@ -776,7 +791,7 @@ function renderSettings() {
   el.querySelectorAll('select[data-k]').forEach(s => s.value = S[s.dataset.k]);
   el.querySelectorAll('[data-k]').forEach(inp => inp.onchange = () => {
     const k = inp.dataset.k; S[k] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? Number(inp.value) : k === 'apiKey' ? cleanKey(inp.value) : inp.value.trim();
-    saveSettings(); renderStatus(); toast('ذخیره شد'); if (k === 'watchlist') cache.clear();
+    saveSettings(); renderStatus(); const kp = k === 'apiKey' && S.apiKey ? keyProblem(inp.value) : null; toast(kp ? '⚠️ ' + kp : 'ذخیره شد', kp ? 7000 : 2600); if (k === 'watchlist') cache.clear();
   });
   $('#testKey').onclick = async () => { toast('در حال تست…'); try { const t = await claude({ system: 'Reply in Persian, one short sentence.', prompt: 'سلام! فقط بگو آماده‌ای.', maxTokens: 2000 }); toast('✓ ' + t, 4000); } catch (e) { toast('✕ ' + e.message, 5000); } };
   $('#exp').onclick = async () => { const { apiKey, ...rest } = S; const t = JSON.stringify(rest, null, 1); try { await navigator.clipboard.writeText(t); toast('تنظیمات (بدون کلید API) کپی شد'); } catch { prompt('کپی کن:', t); } };

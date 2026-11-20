@@ -628,18 +628,23 @@ async function runDesk(sym, tf) {
       <div class="debate"><div class="card topgreen" id="bullC"><h3 class="up">${ic('up')} خوش‌بین</h3><div class="small muted">در حال فکر…</div></div><div class="vs">VS</div><div class="card topred" id="bearC"><h3 class="down">${ic('down')} بدبین</h3><div class="small muted">در حال فکر…</div></div></div>`; };
     const showDebate = () => { $('#bullC').innerHTML = `<h3 class="up">${ic('up')} خوش‌بین</h3><div class="md">${md(run.bull)}</div>`; $('#bearC').innerHTML = `<h3 class="down">${ic('down')} بدبین</h3><div class="md">${md(run.bear)}</div>`; };
 
+    let apiFailed = null;
     if (useAPI) {
-      setStep('fund', 'run', `<div class="small muted" style="margin-top:8px">${S.webSearch ? 'در حال خواندن اخبار و جستجوی وب…' : 'در حال تحلیل…'}</div>`);
-      run.fund = await claude(AGENTS.fundamental(s));
-      setStep('fund', 'done', `<div class="md">${md(run.fund)}</div>`);
-      debate();
-      [run.bull, run.bear] = await Promise.all([claude(AGENTS.bull(s, run.fund, bt)), claude(AGENTS.bear(s, run.fund, bt))]);
-      showDebate();
-      setStep('cio', 'run', '<div class="small muted" style="margin-top:8px">Claude حرف هر دو طرف رو می‌شنوه و جمع‌بندی می‌کنه…</div>');
-      run.plan = parseJSON(await claude(AGENTS.cio(s, run.fund, run.bull, run.bear, bt)));
-    } else {
+      try {
+        setStep('fund', 'run', `<div class="small muted" style="margin-top:8px">${S.webSearch ? 'در حال خواندن اخبار و جستجوی وب…' : 'در حال تحلیل…'}</div>`);
+        run.fund = await claude(AGENTS.fundamental(s));
+        setStep('fund', 'done', `<div class="md">${md(run.fund)}</div>`);
+        debate();
+        [run.bull, run.bear] = await Promise.all([claude(AGENTS.bull(s, run.fund, bt)), claude(AGENTS.bear(s, run.fund, bt))]);
+        showDebate();
+        setStep('cio', 'run', '<div class="small muted" style="margin-top:8px">Claude حرف هر دو طرف رو می‌شنوه و جمع‌بندی می‌کنه…</div>');
+        run.plan = parseJSON(await claude(AGENTS.cio(s, run.fund, run.bull, run.bear, bt)));
+      } catch (e) { apiFailed = e.message; }
+    }
+    if (!useAPI || apiFailed) {
+      if (apiFailed) { run.mode = 'local'; run.apiError = apiFailed; toast('Claude API کار نکرد — ادامه با حالت آفلاین', 4000); }
       const ev = evidence(s, bt);
-      run.fund = localFund(s); setStep('fund', 'done', `<div class="md">${md(run.fund)}</div>`);
+      run.fund = localFund(s); setStep('fund', 'done', (apiFailed ? `<div class="verdict wait small">${ic('warn')} API: ${esc(apiFailed)}</div>` : '') + `<div class="md">${md(run.fund)}</div>`);
       debate(); run.bull = localBull(s, ev); run.bear = localBear(s, ev); showDebate();
       run.plan = localPlan(s, bt, ev);
     }

@@ -257,11 +257,12 @@ function riskCheck(plan, snap) {
 }
 
 /* ───────────────────────── Claude API ───────────────────────── */
+const cleanKey = k => String(k || '').replace(/[^\x21-\x7e]/g, '');
 const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5']);
 async function claude({ system, prompt, webSearch = false, maxTokens = 8000 }) {
   if (!S.apiKey) throw new Error('کلید API در تنظیمات وارد نشده است.');
   const headers = {
-    'content-type': 'application/json', 'x-api-key': S.apiKey,
+    'content-type': 'application/json', 'x-api-key': cleanKey(S.apiKey),
     'anthropic-version': '2026-10-21', 'anthropic-dangerous-direct-browser-access': 'true',
   };
   const body = { model: S.model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }], output_config: { effort: S.effort } };
@@ -274,7 +275,7 @@ async function claude({ system, prompt, webSearch = false, maxTokens = 8000 }) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const m = data?.error?.message || `HTTP ${res.status}`;
-      if (res.status === 401) throw new Error('کلید API نامعتبر است.');
+      if (res.status === 401) { const k = cleanKey(S.apiKey); throw new Error(!k.startsWith('sk-ant-') ? 'کلید باید با sk-ant- شروع شود. احتمالاً کلید از سایت Anthropic نیست یا ناقص کپی شده.' : `کلید API رد شد (${k.length} کاراکتر، آخرش …${k.slice(-4)}). کلید را دوباره کامل کپی کن یا در platform.claude.com یک کلید جدید بساز. پیام سرور: ${m}`); }
       if (res.status === 429) throw new Error('محدودیت نرخ درخواست — کمی صبر کن و دوباره امتحان کن.');
       if (res.status === 403) throw new Error('دسترسی رد شد (احتمالاً محدودیت منطقه‌ای؛ VPN لازم است): ' + m);
       throw new Error(m);
@@ -398,10 +399,15 @@ async function renderHome() {
   </div>
   <h3 style="margin-top:22px">۶ ایجنت هوش مصنوعی. <span class="o">یه اتاق معاملات کامل.</span></h3>
   <div class="grid3" style="margin-top:16px">${AG.map((a, i) => `<div class="card mini" data-ag="${i}"><span class="num">0${i + 1}</span>${ic(a[0])}<div class="t">${a[1]}</div></div>`).join('')}</div>
-  <button class="btn o" id="goScan">${ic('search')} اسکن واچ‌لیست</button>
+  <div class="card green" style="margin-top:22px"><h3>${ic('play', 'ic-o')} چطور ازش استفاده کنم؟ (فقط ۳ قدم)</h3>
+    <div class="row"><b class="o latin">1</b><div class="grow">دکمه <b>شروع تحلیل</b> رو بزن و یه نماد انتخاب کن (مثلاً BTCUSDT)</div></div>
+    <div class="row"><b class="o latin">2</b><div class="grow">دکمه نارنجی <b>اجرای کامل میز معاملات</b> رو بزن و چند ثانیه صبر کن</div></div>
+    <div class="row"><b class="o latin">3</b><div class="grow">صفحه خودش می‌ره پایین روی <b>مدیر ریسک</b>: <span class="up">سبز = معامله مجازه</span>، <span class="down">قرمز = وارد نشو</span></div></div>
+    <button class="btn o" id="goDesk">${ic('play')} شروع تحلیل</button></div>
+  <button class="btn ghost" id="goScan">${ic('search')} اسکن واچ‌لیست</button>
   <div id="scanOut"></div>`;
   el.querySelectorAll('[data-ag]').forEach(c => c.onclick = () => toast(AG[c.dataset.ag][2], 4200));
-  $('#goScan').onclick = runScan;
+  $('#goScan').onclick = runScan; $('#goDesk').onclick = () => go('agents');
   const sym = watch()[0] || 'BTCUSDT';
   try {
     const d = await getCandles(sym); const s = analyze(sym, d);
@@ -627,6 +633,7 @@ async function runDesk(sym, tf) {
     // 6 risk
     run.risk = riskCheck(run.plan, s);
     setStep('risk', 'done', riskHTML(run.risk));
+    $('#st-risk').scrollIntoView({ behavior: 'smooth', block: 'center' });
     saveRun(run); toast('نتیجه در ژورنال ذخیره شد');
   } catch (e) {
     const cur = ['scan', 'bt', 'fund', 'cio', 'risk'].find(id => $('#dot-' + id)?.classList.contains('run')) || ['fund', 'cio', 'risk'].find(id => !$('#dot-' + id)?.classList.contains('done'));
@@ -768,7 +775,7 @@ function renderSettings() {
   <div class="card dash disclaimer" style="margin-top:16px">${ic('warn')}<div>این ابزار کمک تحلیلی است، نه توصیه مالی یا سیگنال تضمینی. کلید API فقط در حافظه همین مرورگر ذخیره می‌شود؛ روی گوشی مشترک استفاده نکن.</div></div>`;
   el.querySelectorAll('select[data-k]').forEach(s => s.value = S[s.dataset.k]);
   el.querySelectorAll('[data-k]').forEach(inp => inp.onchange = () => {
-    const k = inp.dataset.k; S[k] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? Number(inp.value) : inp.value.trim();
+    const k = inp.dataset.k; S[k] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? Number(inp.value) : k === 'apiKey' ? cleanKey(inp.value) : inp.value.trim();
     saveSettings(); renderStatus(); toast('ذخیره شد'); if (k === 'watchlist') cache.clear();
   });
   $('#testKey').onclick = async () => { toast('در حال تست…'); try { const t = await claude({ system: 'Reply in Persian, one short sentence.', prompt: 'سلام! فقط بگو آماده‌ای.', maxTokens: 2000 }); toast('✓ ' + t, 4000); } catch (e) { toast('✕ ' + e.message, 5000); } };
